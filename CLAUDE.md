@@ -77,6 +77,19 @@ the resulting state to `src/render`.
   snapshots in `rng.test.ts` and `puzzle.test.ts` exist to catch that. Update
   them only on purpose, and only before launch.
 
+## Board geometry
+
+- `src/game/board.ts`: segment order, regulation ring sizes, and
+  `scoreHit(x, y)`.
+- **Board coordinates:** (0, 0) is the centre, radius 1 is the outer edge of
+  the double ring. y points DOWN, like the canvas, so 20 is at (0, -1). The
+  renderer only needs to scale and translate.
+- **Wires:** a point exactly on a ring wire scores the region inside it; a
+  point exactly on a radial wire scores the segment clockwise of it.
+- Scoring uses no trig. Segments are found with cross products against the
+  `WIRES` unit vectors, which are hard-coded literals. Keep it that way;
+  don't "simplify" it to `Math.atan2`.
+
 ## Commands
 
 ```
