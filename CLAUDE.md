@@ -89,6 +89,11 @@ the resulting state to `src/render`.
 - Scoring uses no trig. Segments are found with cross products against the
   `WIRES` unit vectors, which are hard-coded literals. Keep it that way;
   don't "simplify" it to `Math.atan2`.
+- `src/render/board.ts` draws the board from those same constants, and every
+  region's colour comes from `hitColor(scoreHit(...))`. Never hard-code board
+  geometry in the renderer. Map pointer positions to board coordinates with
+  `canvasToBoard(fitBoard(...), px, py)`, the inverse of how the board was
+  drawn, so a dart scores exactly what it visually hit.
 
 ## Commands
 

@@ -1,4 +1,5 @@
 import type { Screen } from './App'
+import { BoardCanvas } from './BoardCanvas'
 
 type Props = {
   dateKey: string
@@ -8,8 +9,11 @@ type Props = {
 export function MenuScreen({ dateKey, onNavigate }: Props) {
   return (
     <section className="screen">
-      <h1>Daily Darts</h1>
-      <p className="muted">Puzzle for {dateKey}</p>
+      <header className="title">
+        <h1>Daily Darts</h1>
+        <p className="muted">Puzzle for {dateKey}</p>
+      </header>
+      <BoardCanvas />
       <div className="actions">
         <button onClick={() => onNavigate('game')}>Play</button>
         <button className="secondary" onClick={() => onNavigate('leaderboard')}>

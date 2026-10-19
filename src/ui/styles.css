@@ -39,8 +39,14 @@ body {
   align-items: center;
   gap: 16px;
   width: 100%;
-  max-width: 480px;
+  max-width: 720px;
   text-align: center;
+}
+
+.title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 h1,
@@ -75,10 +81,14 @@ button.secondary {
   color: var(--fg);
 }
 
+/*
+ * Square, as wide as the column allows but never taller than the viewport
+ * minus room for the title and buttons, so the whole screen fits without
+ * scrolling on phones (portrait and landscape) and desktops alike.
+ */
 .board {
   display: block;
-  width: 100%;
+  width: min(100%, max(220px, 100dvh - 200px));
   aspect-ratio: 1;
-  border-radius: 12px;
   touch-action: none;
 }
