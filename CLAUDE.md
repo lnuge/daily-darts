@@ -22,7 +22,8 @@ In practice:
   don't keep it in a module-level variable.
 - **Never read the clock** (`Date`, `Date.now()`, `performance.now()`) in
   `src/game`. The daily seed comes from a date key string (`"2026-10-19"`,
-  UTC) passed in from outside. Time in a round advances by explicit ticks or
+  the player's local date) passed in from outside. For calendar math use
+  `src/game/date.ts`, which does it with integers. Time in a round advances by explicit ticks or
   by timestamps recorded in the player's inputs, never by wall-clock reads.
 - **Inputs are data.** Anything the player does that affects the outcome must
   be captured as a serializable input (e.g. `{ t, x, y }`) so the server can
@@ -54,12 +55,27 @@ the resulting state to `src/render`.
 
 ## Daily puzzle
 
-- Date key: UTC date as `YYYY-MM-DD`, from `todayKey()` in `src/lib/daily.ts`.
-  Puzzles roll over at 00:00 UTC.
-- Seed: `seedFromDateKey(dateKey)` in `src/game/rng.ts`.
-- Changing `hashString`, `seedFromDateKey` or `createRng` changes every past
-  and future puzzle and breaks replay of stored rounds. The pinned snapshot in
-  `rng.test.ts` exists to catch that. Don't update it casually.
+- **Date key:** the player's local date as `YYYY-MM-DD`, from `todayKey()` in
+  `src/lib/daily.ts`. Puzzles roll over at local midnight, so at any moment
+  up to three dates are live somewhere on Earth (UTC-12 to UTC+14). The server
+  should accept a submission for any date that is "today" in some time zone.
+- **Seed:** `getDailySeed(dateKey)` in `src/game/puzzle.ts`.
+- **Puzzle:** `generateDailyPuzzle(dateKey)` in `src/game/puzzle.ts` returns
+  the puzzle number (days since launch, 2026-11-01 = #0), three double-out
+  checkout targets (easy 40-80, medium 81-120, hard 121-170), the crosshair
+  sweep speed and the aim wobble. Ranges are exported constants there.
+- **RNG streams:** each puzzle field draws from its own named stream
+  (``createRng(`${seed}:targets`)`` etc.). Add new fields as new streams; never
+  add draws to an existing stream, or every puzzle changes.
+- **Checkouts:** `src/game/checkout.ts` has the board and a solver
+  (`findCheckout`, `isCheckout`). Only targets with a three-dart double-out
+  finish are ever chosen; the bogey numbers 159, 162, 163, 165, 166, 168, 169
+  never appear.
+- **Don't change past puzzles.** Changing `hashString`, `createRng`,
+  `getDailySeed`, the stream names, the ranges or the pick logic changes every
+  past and future puzzle and breaks replay of stored rounds. The pinned
+  snapshots in `rng.test.ts` and `puzzle.test.ts` exist to catch that. Update
+  them only on purpose, and only before launch.
 
 ## Commands
 

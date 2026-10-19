@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createRng, hashString, seedFromDateKey } from './rng'
+import { createRng, hashString } from './rng'
 
 describe('hashString', () => {
   it('matches known FNV-1a values', () => {
@@ -8,21 +8,18 @@ describe('hashString', () => {
   })
 })
 
-describe('seedFromDateKey', () => {
-  it('gives the same seed for the same date', () => {
-    expect(seedFromDateKey('2026-10-19')).toBe(seedFromDateKey('2026-10-19'))
-  })
-
-  it('gives different seeds for different dates', () => {
-    expect(seedFromDateKey('2026-10-19')).not.toBe(seedFromDateKey('2026-10-20'))
-  })
-
-  it('rejects malformed keys', () => {
-    expect(() => seedFromDateKey('10/19/2026')).toThrow()
-  })
-})
-
 describe('createRng', () => {
+  it('accepts a string seed, equivalent to seeding with its hash', () => {
+    const fromString = createRng('2026-10-19')
+    const fromHash = createRng(hashString('2026-10-19'))
+    expect(fromString.next()).toBe(fromHash.next())
+    expect(fromString.next()).toBe(fromHash.next())
+  })
+
+  it('gives different sequences for different string seeds', () => {
+    expect(createRng('2026-10-19').next()).not.toBe(createRng('2026-10-20').next())
+  })
+
   it('is deterministic for a given seed', () => {
     const a = createRng(42)
     const b = createRng(42)
@@ -46,7 +43,7 @@ describe('createRng', () => {
   })
 
   it('keeps next() in [0, 1) and int() in range', () => {
-    const rng = createRng(seedFromDateKey('2026-10-19'))
+    const rng = createRng('2026-10-19')
     for (let i = 0; i < 10_000; i++) {
       const f = rng.next()
       expect(f).toBeGreaterThanOrEqual(0)

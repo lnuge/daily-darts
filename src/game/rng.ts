@@ -25,17 +25,12 @@ export function hashString(input: string): number {
   return h >>> 0
 }
 
-/** Seed for a daily puzzle. `dateKey` is a UTC date string like "2026-10-19". */
-export function seedFromDateKey(dateKey: string): number {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
-    throw new Error(`Invalid date key: ${dateKey}`)
-  }
-  return hashString(`daily-darts:${dateKey}`)
-}
-
-/** mulberry32: small, fast, good enough for gameplay. */
-export function createRng(seed: number): Rng {
-  let a = seed >>> 0
+/**
+ * mulberry32: small, fast, good enough for gameplay. A string seed is hashed
+ * with FNV-1a first, so `createRng("2026-10-19:targets")` works directly.
+ */
+export function createRng(seed: number | string): Rng {
+  let a = typeof seed === 'string' ? hashString(seed) : seed >>> 0
 
   const next = (): number => {
     a = (a + 0x6d2b79f5) >>> 0
