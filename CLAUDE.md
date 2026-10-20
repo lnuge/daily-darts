@@ -221,6 +221,23 @@ Before considering a change done: `npm run typecheck`, `npm run lint`,
   and offer a retry on network or server failure.
 - Deploy: `npm run functions:deploy` (syncs first, bundles server-side, no Docker).
 
+## Leaderboard
+
+- One RPC, `public.get_leaderboard(p_date, p_limit = 100)` in
+  `supabase/migrations/20261022090000_leaderboard.sql`, returns
+  `{ date, players, average_darts, top[], me }` as JSON. Client: `src/lib/leaderboard.ts`,
+  screen: `src/ui/LeaderboardScreen.tsx` (route `{ name: 'leaderboard', date? }`).
+- Ranking: fewest `total_darts`, then earliest `created_at` (server verification time),
+  then `id`, so ranks are unique. Only verified rounds count. `top` is capped at 100;
+  `me` is the caller's own entry wherever it ranks (null for visitors / didn't play).
+- `security invoker`: RLS and column privileges apply, so it never touches `inputs`, and
+  it returns `is_me` instead of user ids.
+- Speed: everything reads `rounds_leaderboard_idx`; the `day` CTE is `not materialized`
+  so the top list stops after 100 index entries. ~35 ms for 50k players on one day in
+  PGlite. Keep any change index-friendly; tests in `supabase/tests/leaderboard.test.ts`.
+- `supabase/tests/db.ts` sets up PGlite with the Supabase stub and all migrations; use it
+  for any new database test.
+
 ## Notes
 
 - TypeScript is pinned to 6.0.x because typescript-eslint doesn't support

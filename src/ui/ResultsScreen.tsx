@@ -160,6 +160,12 @@ export function ResultsScreen({ mode, puzzle, summary, submission, onNavigate }:
           </pre>
           <div className="actions">
             <button onClick={share}>{copyState === 'copied' ? 'Copied!' : 'Share'}</button>
+            <button
+              className="secondary"
+              onClick={() => onNavigate({ name: 'leaderboard', date: puzzle.date })}
+            >
+              Leaderboard
+            </button>
             <button className="secondary" onClick={() => onNavigate({ name: 'practice' })}>
               Practice
             </button>

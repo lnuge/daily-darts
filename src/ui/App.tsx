@@ -14,7 +14,7 @@ export type Route =
   | { name: 'menu' }
   | { name: 'game'; mode: GameMode; date: string }
   | { name: 'practice' }
-  | { name: 'leaderboard' }
+  | { name: 'leaderboard'; date?: string }
 
 export type Navigate = (route: Route) => void
 
@@ -45,7 +45,9 @@ export function App() {
         />
       )}
       {route.name === 'practice' && <PracticeScreen today={today} onNavigate={setRoute} />}
-      {route.name === 'leaderboard' && <LeaderboardScreen dateKey={today} onNavigate={setRoute} />}
+      {route.name === 'leaderboard' && (
+        <LeaderboardScreen today={today} date={route.date} onNavigate={setRoute} />
+      )}
     </main>
   )
 }

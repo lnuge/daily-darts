@@ -126,6 +126,10 @@ npm.cmd run db:push
 npm.cmd run functions:deploy
 ```
 
+`db:push` also applies later migrations as they're added (for example the leaderboard
+function, `get_leaderboard`). Run it after every `git pull` that adds a file to
+`supabase/migrations`.
+
 `functions:deploy` first copies the latest game code into the function, then bundles it
 on Supabase's servers, so Docker isn't needed. Run it again whenever `src/game` changes.
 

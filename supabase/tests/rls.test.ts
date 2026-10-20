@@ -4,87 +4,22 @@
  * and can't do. No Supabase project or Docker needed.
  */
 
-import { PGlite } from '@electric-sql/pglite'
-import { readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { createTestDb, type TestDb, type Who } from './db.ts'
 
-const MIGRATIONS = join(import.meta.dirname, '..', 'migrations')
-
-/** The parts of a Supabase database the migrations depend on. */
-const SUPABASE_STUB = `
-  create role anon nologin;
-  create role authenticated nologin;
-  create role service_role nologin bypassrls;
-
-  create schema auth;
-  create table auth.users (
-    id uuid primary key default gen_random_uuid(),
-    is_anonymous boolean not null default false
-  );
-  -- Same definition as Supabase: the signed-in user's id from the request JWT.
-  create function auth.uid() returns uuid language sql stable as $$
-    select coalesce(
-      nullif(current_setting('request.jwt.claim.sub', true), ''),
-      (nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub')
-    )::uuid
-  $$;
-  grant usage on schema auth to anon, authenticated, service_role;
-  grant execute on function auth.uid() to anon, authenticated, service_role;
-
-  -- Supabase grants everything on new public tables to these roles; RLS does the rest.
-  grant usage on schema public to anon, authenticated, service_role;
-  alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
-  alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
-`
-
-let db: PGlite
+let t: TestDb
+const as = <T = Record<string, unknown>>(who: Who, sql: string, params: unknown[] = []) =>
+  t.as<T>(who, sql, params)
+const asCommit = (who: Who, sql: string, params: unknown[] = []) => t.asCommit(who, sql, params)
+const newUser = (isAnonymous = false) => t.newUser(isAnonymous)
 
 beforeAll(async () => {
-  db = new PGlite()
-  await db.exec(SUPABASE_STUB)
-  for (const file of readdirSync(MIGRATIONS).sort()) {
-    await db.exec(readFileSync(join(MIGRATIONS, file), 'utf8'))
-  }
+  t = await createTestDb()
 })
 
 afterAll(async () => {
-  await db?.close()
+  await t?.close()
 })
-
-type Who = { role: 'anon' } | { role: 'authenticated'; id: string } | { role: 'service_role' }
-
-/** Runs `sql` as the given user, the way PostgREST would, in a rolled-back transaction. */
-async function as<T = Record<string, unknown>>(who: Who, sql: string, params: unknown[] = []) {
-  return db.transaction(async (tx) => {
-    const claims =
-      who.role === 'authenticated' ? { sub: who.id, role: who.role } : { role: who.role }
-    await tx.query(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify(claims)])
-    await tx.exec(`set local role ${who.role}`)
-    const result = await tx.query<T>(sql, params)
-    await tx.rollback()
-    return result
-  })
-}
-
-/** Like `as`, but commits. */
-async function asCommit(who: Who, sql: string, params: unknown[] = []) {
-  return db.transaction(async (tx) => {
-    const claims =
-      who.role === 'authenticated' ? { sub: who.id, role: who.role } : { role: who.role }
-    await tx.query(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify(claims)])
-    await tx.exec(`set local role ${who.role}`)
-    return tx.query(sql, params)
-  })
-}
-
-async function newUser(isAnonymous = false): Promise<string> {
-  const { rows } = await db.query<{ id: string }>(
-    'insert into auth.users (is_anonymous) values ($1) returning id',
-    [isAnonymous],
-  )
-  return rows[0].id
-}
 
 const PER_TARGET = JSON.stringify([
   { target: 55, darts: 2, outcome: 'checkout' },
@@ -117,7 +52,7 @@ beforeAll(async () => {
 
 describe('profiles', () => {
   it('are created automatically with a neutral name for every new user', async () => {
-    const { rows } = await db.query<{ id: string; display_name: string }>(
+    const { rows } = await t.db.query<{ id: string; display_name: string }>(
       'select id, display_name from public.profiles where id = $1',
       [guest],
     )
@@ -307,7 +242,7 @@ describe('rounds: changing', () => {
 
 describe('accounts', () => {
   it("remove a player's profile and rounds when the account is deleted", async () => {
-    await db.transaction(async (tx) => {
+    await t.db.transaction(async (tx) => {
       await tx.query('delete from auth.users where id = $1', [bob])
       const profiles = await tx.query('select 1 from public.profiles where id = $1', [bob])
       const rounds = await tx.query('select 1 from public.rounds where user_id = $1', [bob])

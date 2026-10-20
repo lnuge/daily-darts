@@ -457,3 +457,117 @@ button.link {
 .submission.error {
   color: #ff8a80;
 }
+
+/* ---------- Leaderboard ---------- */
+
+.date-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.date-nav button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.date-nav input {
+  font: inherit;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #182a20;
+  color: var(--fg);
+}
+
+.stats {
+  margin: 0;
+}
+
+/* Scrolls inside itself, so the page doesn't scroll on long lists. */
+.board-table {
+  width: 100%;
+  max-width: 480px;
+  max-height: min(60dvh, 560px);
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.board-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.board-table th {
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.board-table th,
+.board-table td {
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.board-table tbody tr + tr td {
+  border-top: 1px solid var(--border);
+}
+
+.board-table .rank,
+.board-table .darts {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.board-table .darts {
+  font-weight: 700;
+}
+
+.board-table .name {
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.board-table .time {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.board-table tr.me td {
+  background: #2a3a1c;
+  font-weight: 700;
+}
+
+.board-table tr.me td:first-child {
+  box-shadow: inset 3px 0 0 #ffd23f;
+}
+
+.board-table .you {
+  color: #ffd23f;
+  font-weight: 600;
+}
+
+.board-table tr.gap td {
+  text-align: center;
+  color: var(--muted);
+  padding: 2px;
+}
+
+.board-table tr.pinned td {
+  position: sticky;
+  bottom: 0;
+  border-top: 1px solid #ffd23f;
+}
