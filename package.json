@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "db:push": "supabase db push",
     "sync:game": "node scripts/sync-shared-game.mjs",
-    "functions:deploy": "npm run sync:game && supabase functions deploy submit-round --use-api"
+    "functions:deploy": "npm run sync:game && supabase functions deploy submit-round --use-api",
+    "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
@@ -23,6 +24,7 @@
     "react-dom": "^19.3.1"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.64.0",
     "@electric-sql/pglite": "^0.5.10",
     "@eslint/js": "^10.0.1",
     "@types/node": "^24.19.2",
@@ -39,6 +41,7 @@
     "typescript": "~6.0.0",
     "typescript-eslint": "^8.72.0",
     "vite": "^8.3.4",
-    "vitest": "^5.0.5"
+    "vitest": "^5.0.5",
+    "wrangler": "^4.151.3"
   }
 }

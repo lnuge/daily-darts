@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { todayKey } from '../lib/daily'
 import { rankedStatus } from '../lib/progress'
 import { installAudioUnlock } from '../lib/sound'
@@ -9,30 +9,49 @@ import { LeaderboardScreen } from './LeaderboardScreen'
 import { MenuScreen } from './MenuScreen'
 import { PracticeScreen } from './PracticeScreen'
 import { ProfileScreen } from './ProfileScreen'
+import { pathFor, routeFromPath, type Route } from './routes'
 import { useToday } from './useToday'
 
-/** Ranked: today's puzzle, saved and locked once finished. Practice: any past day, never saved. */
-export type GameMode = 'ranked' | 'practice'
-
-export type Route =
-  | { name: 'menu' }
-  | { name: 'game'; mode: GameMode; date: string }
-  | { name: 'practice' }
-  | { name: 'leaderboard'; date?: string }
-  | { name: 'profile' }
+// Ranked: today's puzzle, saved and locked once finished. Practice: any past day, never saved.
+export type { GameMode, Route } from './routes'
 
 export type Navigate = (route: Route) => void
 
-/** Open straight to today's results if the ranked round is already finished. */
+/**
+ * The screen for the address the page was opened at. Opening the home page
+ * with today's round already finished goes straight to its results.
+ */
 function initialRoute(): Route {
   const today = todayKey()
-  return rankedStatus(today).status === 'finished'
-    ? { name: 'game', mode: 'ranked', date: today }
-    : { name: 'menu' }
+  const route = routeFromPath(window.location.pathname, today)
+  const opening =
+    route.name === 'menu' && rankedStatus(today).status === 'finished'
+      ? ({ name: 'game', mode: 'ranked', date: today } as const)
+      : route
+  // Tidy the address (unknown paths become /, etc.). Keep the query and hash:
+  // a Google sign-in comes back with a one-time code there for Supabase to read.
+  const { pathname, search, hash } = window.location
+  if (pathname !== pathFor(opening)) {
+    window.history.replaceState(null, '', pathFor(opening) + search + hash)
+  }
+  return opening
 }
 
 export function App() {
-  const [route, setRoute] = useState<Route>(initialRoute)
+  const [route, setRouteState] = useState<Route>(initialRoute)
+
+  // Moving between screens adds a history entry, so Back works.
+  const setRoute: Navigate = useCallback((next) => {
+    const path = pathFor(next)
+    if (path !== window.location.pathname) window.history.pushState(null, '', path)
+    setRouteState(next)
+  }, [])
+
+  useEffect(() => {
+    const onPopState = () => setRouteState(routeFromPath(window.location.pathname, todayKey()))
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
   // Rolls over at local midnight. A game keeps the date it was started with,
   // so a round under way at midnight stays on its own puzzle.
   const today = useToday()

@@ -1,6 +1,7 @@
 # Daily Darts
 
-A daily darts puzzle. Everyone gets the same board each day.
+One darts checkout puzzle a day. Everyone gets the same three scores; finish each on a
+double in the fewest darts.
 
 ## Getting started (PowerShell)
 
@@ -12,5 +13,10 @@ npm run dev
 
 Then open http://localhost:5173.
 
-See [CLAUDE.md](./CLAUDE.md) for architecture and the determinism rules for
-`src/game`.
+## Docs
+
+- [CLAUDE.md](./CLAUDE.md): architecture, and the determinism rules for `src/game`.
+- [docs/supabase-setup.md](./docs/supabase-setup.md): database, auth and the
+  `submit-round` edge function.
+- [docs/deploy-cloudflare.md](./docs/deploy-cloudflare.md): deploying to Cloudflare
+  Workers, the custom domain, and the production test checklist.

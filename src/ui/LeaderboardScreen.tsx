@@ -4,6 +4,7 @@ import { practiceRange } from '../lib/daily'
 import { fetchLeaderboard, type Leaderboard, type LeaderboardEntry } from '../lib/leaderboard'
 import { supabase } from '../lib/supabase'
 import type { Navigate } from './App'
+import { pathFor } from './routes'
 
 type Props = {
   today: string
@@ -55,6 +56,13 @@ export function LeaderboardScreen({ today, date: initialDate, onNavigate }: Prop
       current = false
     }
   }, [date, key])
+
+  // Keep the address on the day being viewed, so a refresh or a shared link
+  // opens the same leaderboard. Replaces the entry: day-flipping isn't history.
+  useEffect(() => {
+    const path = pathFor({ name: 'leaderboard', date: date === today ? undefined : date })
+    if (window.location.pathname !== path) window.history.replaceState(null, '', path)
+  }, [date, today])
 
   const state: Load = load?.key === key ? load.value : { status: 'loading' }
   const go = (day: string) => {

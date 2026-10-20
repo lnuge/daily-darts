@@ -275,6 +275,23 @@ Before considering a change done: `npm run typecheck`, `npm run lint`,
   16.8 ms, main thread ~41% busy while playing and ~1% when idle. Re-measure if you add
   per-frame work.
 
+## URLs and deployment
+
+- Every screen has a URL (`src/ui/routes.ts`, pure and tested): `/`, `/play`,
+  `/practice`, `/practice/<date>`, `/leaderboard`, `/leaderboard/<date>`, `/profile`.
+  `App` pushes history on navigation and listens for `popstate`; unknown or invalid
+  paths fall back to the nearest screen. When tidying the URL on load, keep
+  `location.search`/`hash`: OAuth returns a one-time code there.
+- Hosting: Cloudflare Workers with static assets only (`wrangler.jsonc`,
+  `@cloudflare/vite-plugin`), `not_found_handling: "single-page-application"` so any
+  non-file path serves `index.html`. `npm run dev` and `vite preview` run in workerd.
+  Deploy guide and production checklist: `docs/deploy-cloudflare.md`.
+- `VITE_*` variables are baked in at build time: on Cloudflare they're **build**
+  variables. `VITE_SITE_URL` also fills `%SITE_URL%` in `index.html` (Open Graph tags)
+  via the `siteUrl` plugin in `vite.config.ts`.
+- `public/og-image.png` (1200x630) and `public/apple-touch-icon.png` were rendered with
+  the game's own `drawBoard`; regenerate them if the board's look changes.
+
 ## Notes
 
 - TypeScript is pinned to 6.0.x because typescript-eslint doesn't support
