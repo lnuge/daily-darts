@@ -3,9 +3,8 @@ import { todayKey } from '../lib/daily'
 import { GameScreen } from './GameScreen'
 import { LeaderboardScreen } from './LeaderboardScreen'
 import { MenuScreen } from './MenuScreen'
-import { ResultsScreen } from './ResultsScreen'
 
-export type Screen = 'menu' | 'game' | 'results' | 'leaderboard'
+export type Screen = 'menu' | 'game' | 'leaderboard'
 
 export function App() {
   const [screen, setScreen] = useState<Screen>('menu')
@@ -16,7 +15,6 @@ export function App() {
     <main className="app">
       {screen === 'menu' && <MenuScreen dateKey={dateKey} onNavigate={setScreen} />}
       {screen === 'game' && <GameScreen dateKey={dateKey} onNavigate={setScreen} />}
-      {screen === 'results' && <ResultsScreen onNavigate={setScreen} />}
       {screen === 'leaderboard' && <LeaderboardScreen dateKey={dateKey} onNavigate={setScreen} />}
     </main>
   )

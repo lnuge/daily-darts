@@ -55,6 +55,8 @@ export type RoundStep = {
   state: RoundState
   hit: Hit
   outcome: DartOutcome
+  /** Index of the target this dart was thrown at. */
+  targetIndex: number
   /** Remaining score on that target before the dart. */
   remainingBefore: number
   /** Set when this dart ended its target. */
@@ -108,7 +110,13 @@ export function applyHit(state: RoundState, hit: Hit): RoundStep {
     i === state.current ? { ...t, darts, outcome: targetDone } : t,
   )
   const totalDarts = state.totalDarts + 1
-  const step = { hit, outcome, remainingBefore: state.remaining, targetDone }
+  const step = {
+    hit,
+    outcome,
+    targetIndex: state.current,
+    remainingBefore: state.remaining,
+    targetDone,
+  }
 
   if (targetDone) {
     // On to the next target, with a fresh visit.
@@ -161,10 +169,19 @@ export function playThrow(state: RoundState, puzzle: DailyPuzzle, input: ThrowIn
  * returned state may be unfinished if the inputs stop early.
  */
 export function replayRound(date: string, inputs: readonly ThrowInput[]): RoundState {
+  const steps = replaySteps(date, inputs)
+  return steps.length ? steps[steps.length - 1].state : startRound(generateDailyPuzzle(date))
+}
+
+/** Like replayRound, but returns every step (for visit history and summaries). */
+export function replaySteps(date: string, inputs: readonly ThrowInput[]): ThrowStep[] {
   const puzzle = generateDailyPuzzle(date)
   let state = startRound(puzzle)
+  const steps: ThrowStep[] = []
   for (const input of inputs) {
-    state = playThrow(state, puzzle, input).state
+    const step = playThrow(state, puzzle, input)
+    steps.push(step)
+    state = step.state
   }
-  return state
+  return steps
 }

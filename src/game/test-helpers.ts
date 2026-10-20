@@ -69,3 +69,13 @@ export function playRoundToFinish(date: string): ThrowInput[] {
   }
   return inputs
 }
+
+/** A hit from a label: "T20", "D16", "S5", "Bull", "25" or "Miss". */
+export function hitFromLabel(label: string): Hit {
+  if (label === 'Miss') return { segment: 0, multiplier: 0, points: 0, isDouble: false }
+  if (label === 'Bull') return { segment: 25, multiplier: 2, points: 50, isDouble: true }
+  if (label === '25') return { segment: 25, multiplier: 1, points: 25, isDouble: false }
+  const multiplier = ('SDT'.indexOf(label[0]) + 1) as 1 | 2 | 3
+  const segment = Number(label.slice(1))
+  return { segment, multiplier, points: segment * multiplier, isDouble: multiplier === 2 }
+}

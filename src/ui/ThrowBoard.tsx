@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
-import { hitLabel } from '../game/board'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { DailyPuzzle } from '../game/puzzle'
 import {
   MAX_THROW_MS,
   aimPoint,
   resolveThrow,
   sweepPosition,
+  type ThrowInput,
   type ThrowResult,
 } from '../game/throw'
 import { fitBoard } from '../render/board'
@@ -15,23 +15,42 @@ import { BoardCanvas } from './BoardCanvas'
 
 type Phase = 'aimX' | 'aimY' | 'landed'
 
-type Status = { phase: Phase; last: ThrowResult | null }
+type Props = {
+  puzzle: DailyPuzzle
+  /** False once the round is over: taps are ignored and nothing sweeps. */
+  enabled: boolean
+  /**
+   * True while a visit is in progress. When the next throw starts and this
+   * is false, the board is cleared, like pulling the darts out.
+   */
+  visitOpen: boolean
+  /** Called once per throw with its resolved result. */
+  onThrow: (result: ThrowResult) => void
+}
 
-/** Darts left on the board; the oldest is removed when a fourth lands. */
+/** Never more than one visit's darts on the board. */
 const DARTS_SHOWN = 3
 
 /**
  * The throw loop. Collects the two taps of each throw as whole milliseconds
  * since the throw started, hands them to `resolveThrow` (pure, in src/game)
- * and draws the result. Nothing here decides where a dart lands.
+ * and draws the result. Nothing here decides where a dart lands or what the
+ * rules make of it: that's the caller's job, via `onThrow`.
  *
  * Two stacked canvases: the static board underneath, and an overlay redrawn
  * every frame with the aim lines and darts.
  */
-export function ThrowBoard({ puzzle }: { puzzle: DailyPuzzle }) {
+export function ThrowBoard({ puzzle, enabled, visitOpen, onThrow }: Props) {
   const stackRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLCanvasElement>(null)
-  const [status, setStatus] = useState<Status>({ phase: 'aimX', last: null })
+  const [phase, setPhase] = useState<Phase>('aimX')
+  const [lastInput, setLastInput] = useState<ThrowInput | null>(null)
+
+  // Latest props for the long-lived loop below, without restarting it.
+  const propsRef = useRef({ enabled, visitOpen, onThrow })
+  useLayoutEffect(() => {
+    propsRef.current = { enabled, visitOpen, onThrow }
+  })
 
   useEffect(() => {
     const stack = stackRef.current
@@ -39,34 +58,40 @@ export function ThrowBoard({ puzzle }: { puzzle: DailyPuzzle }) {
     if (!stack || !canvas) return
 
     // Throw state. Plain variables, not React state: they change every tap
-    // and are read every frame. React state only mirrors them for the text.
+    // and are read every frame. React state only mirrors the phase for text.
     let phase: Phase = 'aimX'
     let start = performance.now()
     let lockX = 0
     const darts: { result: ThrowResult; resolvedAt: number }[] = []
 
+    const setLoopPhase = (next: Phase) => {
+      phase = next
+      setPhase(next)
+    }
+
     const startThrow = (now: number) => {
-      phase = 'aimX'
+      if (!propsRef.current.visitOpen) darts.length = 0
       start = now
-      setStatus((s) => ({ ...s, phase }))
+      setLoopPhase('aimX')
     }
 
     const tap = () => {
+      if (!propsRef.current.enabled) return
       const now = performance.now()
       // Whole milliseconds: the exact numbers the server will replay.
       const elapsed = Math.round(now - start)
       if (phase === 'aimX') {
         if (elapsed > MAX_THROW_MS) return startThrow(now) // left idle too long
         lockX = elapsed
-        phase = 'aimY'
-        setStatus((s) => ({ ...s, phase }))
+        setLoopPhase('aimY')
       } else if (phase === 'aimY') {
         if (elapsed > MAX_THROW_MS) return startThrow(now)
         const result = resolveThrow(puzzle, { lockX, lockY: elapsed })
         darts.push({ result, resolvedAt: now })
         if (darts.length > DARTS_SHOWN) darts.shift()
-        phase = 'landed'
-        setStatus({ phase, last: result })
+        setLoopPhase('landed')
+        setLastInput(result.input)
+        propsRef.current.onThrow(result)
       } else if (now - darts[darts.length - 1].resolvedAt >= DART_FLIGHT_MS) {
         startThrow(now) // ignore taps while the dart is still in the air
       }
@@ -79,7 +104,7 @@ export function ThrowBoard({ puzzle }: { puzzle: DailyPuzzle }) {
     }
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.code !== 'Space') return
-      // Let Space press a focused button (Back, Finish) as usual.
+      // Let Space press a focused button or toggle as usual.
       if (e.target instanceof Element && e.target.closest('button, a, input, select, textarea')) {
         return
       }
@@ -108,38 +133,40 @@ export function ThrowBoard({ puzzle }: { puzzle: DailyPuzzle }) {
       const now = performance.now()
       const elapsed = now - start
       const last = darts[darts.length - 1]
-      const scene: ThrowScene = {
-        aim:
-          phase === 'aimX'
-            ? {
-                x: sweepPosition(elapsed, puzzle.sweepSpeed),
-                y: null,
-                xLocked: false,
-                yLocked: false,
-                sinceLandedMs: null,
-              }
-            : phase === 'aimY'
-              ? {
-                  x: aimPoint({ lockX, lockY: lockX }, puzzle.sweepSpeed).x,
-                  y: sweepPosition(elapsed - lockX, puzzle.sweepSpeed),
-                  xLocked: true,
-                  yLocked: false,
-                  sinceLandedMs: null,
-                }
-              : {
-                  ...last.result.aim,
-                  xLocked: true,
-                  yLocked: true,
-                  sinceLandedMs: now - last.resolvedAt,
-                },
+      let aim: ThrowScene['aim'] = null
+      if (phase === 'aimX' && propsRef.current.enabled) {
+        aim = {
+          x: sweepPosition(elapsed, puzzle.sweepSpeed),
+          y: null,
+          xLocked: false,
+          yLocked: false,
+          sinceLandedMs: null,
+        }
+      } else if (phase === 'aimY') {
+        aim = {
+          x: aimPoint({ lockX, lockY: lockX }, puzzle.sweepSpeed).x,
+          y: sweepPosition(elapsed - lockX, puzzle.sweepSpeed),
+          xLocked: true,
+          yLocked: false,
+          sinceLandedMs: null,
+        }
+      } else if (phase === 'landed' && last) {
+        aim = {
+          ...last.result.aim,
+          xLocked: true,
+          yLocked: true,
+          sinceLandedMs: now - last.resolvedAt,
+        }
+      }
+      drawThrowScene(ctx, fitBoard(width, height), {
+        aim,
         darts: darts.map((d) => ({
           ...d.result.landing,
           hit: d.result.hit,
           ageMs: now - d.resolvedAt,
           showScore: phase === 'landed' && d === last,
         })),
-      }
-      drawThrowScene(ctx, fitBoard(width, height), scene)
+      })
       frame = requestAnimationFrame(draw)
     }
     frame = requestAnimationFrame(draw)
@@ -151,34 +178,25 @@ export function ThrowBoard({ puzzle }: { puzzle: DailyPuzzle }) {
     }
   }, [puzzle])
 
-  const { phase, last } = status
+  const prompt = !enabled
+    ? ''
+    : phase === 'aimX'
+      ? 'Tap or press Space to lock left–right'
+      : phase === 'aimY'
+        ? 'Tap or press Space to lock up–down'
+        : 'Tap or press Space for the next dart'
   return (
     <>
       <div
         ref={stackRef}
         className="board-stack"
         // The last throw's input, for debugging and end-to-end tests.
-        data-last-throw={last ? JSON.stringify(last.input) : undefined}
+        data-last-throw={lastInput ? JSON.stringify(lastInput) : undefined}
       >
         <BoardCanvas className="layer" />
         <canvas ref={overlayRef} className="layer" aria-hidden="true" />
       </div>
-      <div className="throw-status" aria-live="polite">
-        {phase === 'landed' && last ? (
-          <>
-            <p className="throw-result">
-              {last.hit.multiplier === 0
-                ? 'Miss'
-                : `${hitLabel(last.hit)} · ${last.hit.points} points`}
-            </p>
-            <p className="muted">Tap or press Space to throw again</p>
-          </>
-        ) : (
-          <p className="muted">
-            Tap or press Space to lock {phase === 'aimX' ? 'left–right' : 'up–down'}
-          </p>
-        )}
-      </div>
+      <p className="muted throw-prompt">{prompt}</p>
     </>
   )
 }

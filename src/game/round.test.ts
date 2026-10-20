@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-import type { Hit } from './board'
 import { LAUNCH_DATE, generateDailyPuzzle } from './puzzle'
 import {
   MAX_DARTS_PER_TARGET,
@@ -12,17 +11,7 @@ import {
   type RoundState,
   type RoundStep,
 } from './round'
-import { playRoundToFinish } from './test-helpers'
-
-/** A hit from a label: "T20", "D16", "S5", "Bull", "25" or "Miss". */
-function h(label: string): Hit {
-  if (label === 'Miss') return { segment: 0, multiplier: 0, points: 0, isDouble: false }
-  if (label === 'Bull') return { segment: 25, multiplier: 2, points: 50, isDouble: true }
-  if (label === '25') return { segment: 25, multiplier: 1, points: 25, isDouble: false }
-  const multiplier = ('SDT'.indexOf(label[0]) + 1) as 1 | 2 | 3
-  const segment = Number(label.slice(1))
-  return { segment, multiplier, points: segment * multiplier, isDouble: multiplier === 2 }
-}
+import { hitFromLabel as h, playRoundToFinish } from './test-helpers'
 
 /** Throws the labelled darts in order; returns every step. */
 function play(state: RoundState, labels: string[]): RoundStep[] {

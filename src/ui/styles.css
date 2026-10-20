@@ -127,3 +127,216 @@ button.secondary {
   font-size: 1.25rem;
   font-weight: 800;
 }
+
+/* ---------- Game screen ---------- */
+
+.screen.game {
+  gap: 10px;
+}
+
+/* Leave room for the HUD above the board. */
+.game .board-stack {
+  width: min(100%, max(220px, 100dvh - 330px));
+}
+
+.throw-prompt {
+  min-height: 1.4em;
+}
+
+.hud {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.chips {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.chip.current {
+  border-color: var(--accent);
+  color: var(--fg);
+  font-weight: 700;
+}
+
+.chip.done .chip-target {
+  text-decoration: line-through;
+}
+
+.chip-darts {
+  font-size: 0.85em;
+}
+
+.hud-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.remaining {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.hud-label {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.hud-label strong {
+  color: var(--fg);
+}
+
+.remaining-value {
+  font-size: 2.6rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.hud-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.visit {
+  display: flex;
+  gap: 6px;
+}
+
+.slot {
+  display: grid;
+  place-items: center;
+  min-width: 3.2em;
+  height: 2em;
+  padding: 0 6px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.slot.filled {
+  border-style: solid;
+  background: #182a20;
+}
+
+.hint-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 2.25rem;
+}
+
+.toggle {
+  padding: 4px 12px;
+  font-size: 0.85rem;
+  background: transparent;
+  border-color: var(--border);
+  color: var(--muted);
+}
+
+.toggle.on {
+  border-color: #ffd23f;
+  color: #ffd23f;
+}
+
+.hint {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.message {
+  margin: 0;
+  min-height: 1.4em;
+  font-weight: 700;
+}
+
+/* ---------- Results ---------- */
+
+.total {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.total-value {
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.per-target {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.per-target th,
+.per-target td {
+  padding: 6px 16px;
+  text-align: left;
+}
+
+.per-target th {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.per-target tbody tr + tr td {
+  border-top: 1px solid var(--border);
+}
+
+.rating {
+  display: inline-block;
+  width: 0.8em;
+  height: 0.8em;
+  margin-right: 8px;
+  border-radius: 50%;
+  vertical-align: -0.05em;
+}
+
+.rating.green {
+  background: #2fbf63;
+}
+
+.rating.yellow {
+  background: #f5c542;
+}
+
+.rating.red {
+  background: #e5484d;
+}
+
+.share-preview {
+  margin: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+  text-align: left;
+  white-space: pre-wrap;
+  user-select: all;
+}

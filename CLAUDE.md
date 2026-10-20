@@ -127,6 +127,20 @@ the resulting state to `src/render`.
 - Tests: `playRoundToFinish` in `test-helpers.ts` is a bot that finds real tap
   inputs finishing a day's round; use it for end-to-end replay tests.
 
+## Summaries, par and sharing
+
+- `src/game/summary.ts`: `splitVisits(steps)` groups darts into visits
+  (3 darts, a bust, or the target ending closes one); `summarizeRound`
+  gives total darts, per-target darts, par, rating and best visit.
+- Par = fewest darts that can finish the target (`minDarts`, from the
+  checkout solver) + `PAR_ALLOWANCE` (3). Rating: green at or under par,
+  yellow up to `YELLOW_ALLOWANCE` (3) over, red beyond or capped.
+- `src/lib/share.ts`: `buildShareText` makes the spoiler-free share text
+  (dart counts and colours only, never targets). The link is
+  `VITE_SITE_URL` if set, else the page origin.
+- The game screen keeps the round as a list of steps and derives every
+  state from it with the same pure functions the server replays.
+
 ## Commands
 
 ```
