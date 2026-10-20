@@ -1,5 +1,7 @@
+import { useMemo } from 'react'
+import { generateDailyPuzzle } from '../game/puzzle'
 import type { Screen } from './App'
-import { BoardCanvas } from './BoardCanvas'
+import { ThrowBoard } from './ThrowBoard'
 
 type Props = {
   dateKey: string
@@ -7,10 +9,12 @@ type Props = {
 }
 
 export function GameScreen({ dateKey, onNavigate }: Props) {
+  const puzzle = useMemo(() => generateDailyPuzzle(dateKey), [dateKey])
+
   return (
     <section className="screen">
       <p className="muted">Puzzle for {dateKey}</p>
-      <BoardCanvas />
+      <ThrowBoard puzzle={puzzle} />
       <div className="actions">
         <button className="secondary" onClick={() => onNavigate('menu')}>
           Back

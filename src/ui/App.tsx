@@ -9,7 +9,7 @@ export type Screen = 'menu' | 'game' | 'results' | 'leaderboard'
 
 export function App() {
   const [screen, setScreen] = useState<Screen>('menu')
-  // Fixed for the session so a round started before midnight UTC stays on its puzzle.
+  // Fixed for the session so a round started before local midnight stays on its puzzle.
   const [dateKey] = useState(todayKey)
 
   return (

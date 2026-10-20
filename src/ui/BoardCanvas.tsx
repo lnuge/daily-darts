@@ -7,7 +7,7 @@ import { setupCanvas } from '../render/canvas'
  * what's drawn on it. Redraws when the element resizes or the device pixel
  * ratio changes (browser zoom, moving the window to another monitor).
  */
-export function BoardCanvas() {
+export function BoardCanvas({ className = 'board' }: { className?: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -42,5 +42,5 @@ export function BoardCanvas() {
     }
   }, [])
 
-  return <canvas ref={canvasRef} className="board" role="img" aria-label="Dartboard" />
+  return <canvas ref={canvasRef} className={className} role="img" aria-label="Dartboard" />
 }

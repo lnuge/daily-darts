@@ -95,6 +95,22 @@ the resulting state to `src/render`.
   `canvasToBoard(fitBoard(...), px, py)`, the inverse of how the board was
   drawn, so a dart scores exactly what it visually hit.
 
+## Throws
+
+- `src/game/throw.ts`. A throw's whole input is `{ lockX, lockY }`: whole
+  milliseconds from the start of the throw to each tap (both measured from
+  the throw start). `resolveThrow(puzzle, input)` turns it into the aim
+  point, landing point and `Hit`. That is the function the server replays.
+- Aim lines move as a triangle wave (`sweepPosition`): start at
+  \-`SWEEP_EXTENT`, one edge-to-edge pass per `1000 / sweepSpeed` ms. The Y
+  line starts sweeping when X locks.
+- Scatter: a uniform point within `puzzle.wobble` of the aim, from the RNG
+  stream `${seed}:throw:${lockX}:${lockY}`. Same day and taps, same landing.
+- The UI (`src/ui/ThrowBoard.tsx`) only records taps, rounding to whole ms,
+  and draws. It must never compute a landing or score itself, and the
+  renderer draws aim lines with the same `sweepPosition`, so the line on
+  screen is the line that locks.
+
 ## Commands
 
 ```

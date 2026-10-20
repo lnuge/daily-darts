@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { RADIUS, WIRES, scoreHit } from './board'
+import { RADIUS, WIRES, hitLabel, scoreHit } from './board'
 
 /**
  * Board point at `degrees` clockwise from straight up and radius `r`.
@@ -162,5 +162,16 @@ describe('board geometry', () => {
       expect(ox).toBe(-x)
       expect(oy).toBe(-y)
     })
+  })
+})
+
+describe('hitLabel', () => {
+  it('names each kind of hit', () => {
+    expect(hitLabel(scoreHit(0, 0))).toBe('Bull')
+    expect(hitLabel(scoreHit(0.06, 0))).toBe('Outer bull')
+    expect(hitLabel(scoreHit(0, -0.6))).toBe('T20')
+    expect(hitLabel(scoreHit(0, 0.97))).toBe('D3')
+    expect(hitLabel(scoreHit(0.8, 0))).toBe('S6')
+    expect(hitLabel(scoreHit(2, 2))).toBe('Miss')
   })
 })

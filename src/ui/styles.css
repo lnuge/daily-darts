@@ -86,9 +86,44 @@ button.secondary {
  * minus room for the title and buttons, so the whole screen fits without
  * scrolling on phones (portrait and landscape) and desktops alike.
  */
-.board {
+.board,
+.board-stack {
   display: block;
-  width: min(100%, max(220px, 100dvh - 200px));
+  width: min(100%, max(220px, 100dvh - 220px));
   aspect-ratio: 1;
   touch-action: none;
+}
+
+/* The game board: static board canvas with the throw overlay on top. */
+.board-stack {
+  position: relative;
+  cursor: crosshair;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.board-stack > .layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Fixed height so the layout doesn't jump as the text changes. */
+.throw-status {
+  min-height: 3em;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+
+.throw-status p {
+  margin: 0;
+}
+
+.throw-result {
+  font-size: 1.25rem;
+  font-weight: 800;
 }

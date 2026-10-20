@@ -88,6 +88,13 @@ function hit(segment: number, multiplier: HitMultiplier): Hit {
   return { segment, multiplier, points: segment * multiplier, isDouble: multiplier === 2 }
 }
 
+/** Short name for a hit: "T20", "D16", "S5", "Bull", "Outer bull" or "Miss". */
+export function hitLabel(hit: Hit): string {
+  if (hit.multiplier === 0) return 'Miss'
+  if (hit.segment === 25) return hit.multiplier === 2 ? 'Bull' : 'Outer bull'
+  return `${'SDT'[hit.multiplier - 1]}${hit.segment}`
+}
+
 /**
  * Positive when (x, y) is clockwise of the wire, zero when exactly on it.
  * (A 2D cross product; with y pointing down, positive means clockwise.)
