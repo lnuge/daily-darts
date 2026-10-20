@@ -4,6 +4,8 @@ import type { Rating, RoundSummary } from '../game/summary'
 import { formatCountdown, puzzleEndsAt, todayKey } from '../lib/daily'
 import { buildShareText, copyText } from '../lib/share'
 import { AccountBar } from './AccountBar'
+import { StatsPanel } from './PlayerStats'
+import { usePlayerStats } from './usePlayerStats'
 import type { SubmissionStatus } from './useRoundSubmission'
 import type { GameMode, Navigate } from './App'
 
@@ -96,6 +98,11 @@ function SubmissionLine({ status, retry }: { status: SubmissionStatus; retry: ()
 
 export function ResultsScreen({ mode, puzzle, summary, submission, onNavigate }: Props) {
   const ranked = mode === 'ranked'
+  // Stats come from verified rounds, so load them once this round is verified
+  // (and reload if that happens again, e.g. after a retry).
+  const verified =
+    ranked && (submission?.status.kind === 'verified' || submission?.status.kind === 'already')
+  const stats = usePlayerStats(verified, todayKey(), submission?.status.kind)
   const shareText = buildShareText(puzzle.puzzleNumber, summary, siteUrl())
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
 
@@ -152,6 +159,7 @@ export function ResultsScreen({ mode, puzzle, summary, submission, onNavigate }:
       </p>
 
       {ranked && submission && <SubmissionLine {...submission} />}
+      {verified && <StatsPanel load={stats} />}
 
       {ranked ? (
         <>

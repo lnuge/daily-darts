@@ -5,6 +5,7 @@ import { GameScreen } from './GameScreen'
 import { LeaderboardScreen } from './LeaderboardScreen'
 import { MenuScreen } from './MenuScreen'
 import { PracticeScreen } from './PracticeScreen'
+import { ProfileScreen } from './ProfileScreen'
 import { useToday } from './useToday'
 
 /** Ranked: today's puzzle, saved and locked once finished. Practice: any past day, never saved. */
@@ -15,6 +16,7 @@ export type Route =
   | { name: 'game'; mode: GameMode; date: string }
   | { name: 'practice' }
   | { name: 'leaderboard'; date?: string }
+  | { name: 'profile' }
 
 export type Navigate = (route: Route) => void
 
@@ -45,6 +47,7 @@ export function App() {
         />
       )}
       {route.name === 'practice' && <PracticeScreen today={today} onNavigate={setRoute} />}
+      {route.name === 'profile' && <ProfileScreen today={today} onNavigate={setRoute} />}
       {route.name === 'leaderboard' && (
         <LeaderboardScreen today={today} date={route.date} onNavigate={setRoute} />
       )}

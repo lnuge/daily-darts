@@ -238,6 +238,21 @@ Before considering a change done: `npm run typecheck`, `npm run lint`,
 - `supabase/tests/db.ts` sets up PGlite with the Supabase stub and all migrations; use it
   for any new database test.
 
+## Player stats
+
+- `public.get_player_stats(p_today)` in `supabase/migrations/20261023090000_player_stats.sql`:
+  rounds played, current and best streak, average darts, best round, perfect checkouts,
+  last played. Computed on every call from the caller's **verified** rounds, which only
+  the server writes, so they can't be faked. Client: `src/lib/stats.ts`,
+  `usePlayerStats`, `StatsGrid`/`StatsPanel`; shown on results (once the round is
+  verified) and on the profile screen (route `{ name: 'profile' }`).
+- Streak = consecutive puzzle dates with a verified round. Current streak counts if the
+  latest run ends today or yesterday. `p_today` (the player's local date) is clamped to
+  the dates that are today somewhere on Earth, so an old date can't revive a streak.
+- Perfect checkout = a target finished in `checkout_min_darts.darts` for its score. That
+  table is built in SQL by the migration and tested against `findCheckout` for every
+  score; if the checkout rules ever change, change both.
+
 ## Notes
 
 - TypeScript is pinned to 6.0.x because typescript-eslint doesn't support

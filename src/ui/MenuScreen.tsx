@@ -34,6 +34,9 @@ export function MenuScreen({ today, onNavigate }: Props) {
         <button className="secondary" onClick={() => onNavigate({ name: 'leaderboard' })}>
           Leaderboard
         </button>
+        <button className="secondary" onClick={() => onNavigate({ name: 'profile' })}>
+          Profile
+        </button>
       </div>
       <AccountBar />
     </section>
