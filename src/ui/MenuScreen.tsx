@@ -7,9 +7,10 @@ import { BoardCanvas } from './BoardCanvas'
 type Props = {
   today: string
   onNavigate: Navigate
+  onHowToPlay: () => void
 }
 
-export function MenuScreen({ today, onNavigate }: Props) {
+export function MenuScreen({ today, onNavigate, onHowToPlay }: Props) {
   const status = useMemo(() => rankedStatus(today), [today])
   const play = () => onNavigate({ name: 'game', mode: 'ranked', date: today })
 
@@ -38,6 +39,9 @@ export function MenuScreen({ today, onNavigate }: Props) {
           Profile
         </button>
       </div>
+      <button className="link" onClick={onHowToPlay}>
+        How to play
+      </button>
       <AccountBar />
     </section>
   )

@@ -1,13 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { generateDailyPuzzle } from '../game/puzzle'
 import { playThrow, startRound, type ThrowStep } from '../game/round'
 import { splitVisits, summarizeRound } from '../game/summary'
 import type { ThrowResult } from '../game/throw'
+import { feedbackFor } from '../lib/feedback'
 import { restoreRankedSteps, saveRankedInputs } from '../lib/progress'
+import { isMuted, playSound, setMuted } from '../lib/sound'
 import { loadJson, saveJson } from '../lib/storage'
 import type { GameMode, Navigate } from './App'
 import { Hud } from './Hud'
 import { ResultsScreen } from './ResultsScreen'
+import { DART_FLIGHT_MS } from '../render/throw'
 import { ThrowBoard } from './ThrowBoard'
 import { useRoundSubmission } from './useRoundSubmission'
 
@@ -75,6 +78,26 @@ export function GameScreen({ mode, date, onNavigate }: Props) {
     steps.map((s) => s.throw.input),
   )
 
+  // Sound, shake and "CHECKOUT!" for each new dart, timed to when it lands.
+  // Darts restored when the game reopens are already counted, so they're quiet.
+  const [muted, setMutedState] = useState(isMuted)
+  const [celebrate, setCelebrate] = useState(0)
+  const announced = useRef(restored.steps.length)
+  useEffect(() => {
+    if (steps.length <= announced.current) return
+    announced.current = steps.length
+    const feedback = feedbackFor(steps[steps.length - 1])
+    for (const sound of feedback.sounds) playSound(sound.name, DART_FLIGHT_MS + sound.delayMs)
+    if (!feedback.celebrate) return
+    const timer = setTimeout(() => setCelebrate((n) => n + 1), DART_FLIGHT_MS)
+    return () => clearTimeout(timer)
+  }, [steps])
+
+  const toggleMute = () => {
+    setMuted(!muted)
+    setMutedState(!muted)
+  }
+
   const toggleHint = () =>
     setHintOn((on) => {
       saveJson('hint', !on)
@@ -102,13 +125,21 @@ export function GameScreen({ mode, date, onNavigate }: Props) {
   return (
     <section className="screen game">
       {!ranked && <p className="badge practice">Practice · {date} · Unranked</p>}
-      <Hud round={round} steps={steps} hintOn={hintOn} onToggleHint={toggleHint} />
+      <Hud
+        round={round}
+        steps={steps}
+        hintOn={hintOn}
+        onToggleHint={toggleHint}
+        muted={muted}
+        onToggleMute={toggleMute}
+      />
       <ThrowBoard
         puzzle={puzzle}
         enabled={!round.finished}
         visitOpen={round.dartsThisVisit > 0}
         initialDarts={restored.boardDarts}
         onThrow={onThrow}
+        celebrate={celebrate}
       />
       <div className="actions">
         <button className="secondary" onClick={() => onNavigate({ name: 'menu' })}>

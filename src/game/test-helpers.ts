@@ -26,16 +26,21 @@ export function isLegalCheckoutRoute(score: number, route: readonly Dart[]): boo
  * Searches tap times for a throw whose result satisfies `wanted`. Tries the
  * taps whose aim point already scores what's wanted first (cheap), then
  * everything. Deterministic: always returns the same input.
+ *
+ * `minGapMs` keeps taps at least that far apart (and from the throw's start),
+ * for inputs a person could tap through the real UI, which ignores taps
+ * closer together than that as accidental double taps.
  */
 export function findInput(
   puzzle: DailyPuzzle,
   wanted: (hit: Hit) => boolean,
   stepMs = 3,
+  minGapMs = 0,
 ): ThrowInput | null {
   const cycle = Math.ceil(2000 / puzzle.sweepSpeed) // one full back-and-forth
   for (const aimMustMatch of [true, false]) {
-    for (let lockX = 0; lockX < cycle; lockX += stepMs) {
-      for (let dy = 0; dy < cycle; dy += stepMs) {
+    for (let lockX = minGapMs; lockX < minGapMs + cycle; lockX += stepMs) {
+      for (let dy = minGapMs; dy < minGapMs + cycle; dy += stepMs) {
         const input = { lockX, lockY: lockX + dy }
         if (aimMustMatch) {
           const aim = aimPoint(input, puzzle.sweepSpeed)

@@ -14,6 +14,13 @@ const POPUP_RISE_MS = 520
 /** Locked aim lines fade out over this long once the dart has landed. */
 const AIM_FADE_MS = 700
 
+/**
+ * After this long, a landed dart's scene stops changing (fly-in, impact ring,
+ * popup rise and aim fade are all done), so it doesn't need redrawing.
+ */
+export const SCENE_SETTLE_MS =
+  DART_FLIGHT_MS + Math.max(IMPACT_MS, POPUP_FADE_MS, POPUP_RISE_MS, AIM_FADE_MS)
+
 const COLORS = {
   aim: '#ffd23f',
   aimOutline: 'rgba(0, 0, 0, 0.55)',

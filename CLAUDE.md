@@ -253,6 +253,28 @@ Before considering a change done: `npm run typecheck`, `npm run lint`,
   table is built in SQL by the migration and tested against `findCheckout` for every
   score; if the checkout rules ever change, change both.
 
+## Game feel and performance
+
+- Sound (`src/lib/sound.ts`): synthesised with Web Audio, no files. The AudioContext is
+  unlocked on the first user gesture (`installAudioUnlock` in `App`); sounds are
+  scheduled on the audio clock to land with the dart (`DART_FLIGHT_MS`). Mute is saved
+  as `daily-darts:muted`. Which sounds play, and whether to celebrate, is the pure
+  `feedbackFor(step)` in `src/lib/feedback.ts` (tested).
+- Checkout: `ThrowBoard`'s `celebrate` counter triggers a Web Animations shake (skipped
+  for `prefers-reduced-motion`) and a CSS "CHECKOUT!" flash. Both are transform/opacity
+  only, so they run on the compositor without redrawing canvases.
+- How to play: `HowToPlay` (`<dialog>`), shown until `daily-darts:howto-seen`, and from
+  the menu.
+- Taps: `ThrowBoard` ignores taps within `MIN_TAP_GAP_MS` (120 ms) of the last one and
+  non-primary pointers (second fingers). Test bots driving the real UI must keep taps at
+  least that far apart (`findInput(..., minGapMs)`). Every button is at least 44x44 px;
+  `touch-action` stops double-tap zoom and swipes on the board; no page scroll in game.
+- Performance: the static board is drawn once; only the overlay redraws per frame, at
+  most 2x DPR, and it stops drawing once the scene has settled (`SCENE_SETTLE_MS`).
+  Measured on a 390x844 @3x viewport with 4x CPU throttling: steady 60 fps, worst frame
+  16.8 ms, main thread ~41% busy while playing and ~1% when idle. Re-measure if you add
+  per-frame work.
+
 ## Notes
 
 - TypeScript is pinned to 6.0.x because typescript-eslint doesn't support

@@ -9,8 +9,8 @@ import {
   type ThrowResult,
 } from '../game/throw'
 import { fitBoard } from '../render/board'
-import { setupCanvas, type CanvasSurface } from '../render/canvas'
-import { DART_FLIGHT_MS, drawThrowScene, type ThrowScene } from '../render/throw'
+import { canvasDpr, setupCanvas, type CanvasSurface } from '../render/canvas'
+import { DART_FLIGHT_MS, SCENE_SETTLE_MS, drawThrowScene, type ThrowScene } from '../render/throw'
 import { BoardCanvas } from './BoardCanvas'
 
 type Phase = 'aimX' | 'aimY' | 'landed'
@@ -28,10 +28,31 @@ type Props = {
   initialDarts?: readonly ThrowResult[]
   /** Called once per throw with its resolved result. */
   onThrow: (result: ThrowResult) => void
+  /** Bump to shake the board and flash "CHECKOUT!" (0 = never). */
+  celebrate?: number
 }
 
 /** Never more than one visit's darts on the board. */
 const DARTS_SHOWN = 3
+
+/**
+ * Taps closer together than this are treated as one: an accidental double tap
+ * (or a bounce) shouldn't lock both lines or throw a dart by surprise. No
+ * deliberate tap needs to be faster: the second line has barely left the edge.
+ */
+const MIN_TAP_GAP_MS = 120
+
+/** The overlay is redrawn every frame; 2x is sharp enough and much cheaper than 3x. */
+const OVERLAY_MAX_DPR = 2
+
+const SHAKE: Keyframe[] = [
+  { transform: 'translate(0, 0)' },
+  { transform: 'translate(-6px, 3px)' },
+  { transform: 'translate(5px, -4px)' },
+  { transform: 'translate(-4px, -2px)' },
+  { transform: 'translate(3px, 3px)' },
+  { transform: 'translate(0, 0)' },
+]
 
 /**
  * The throw loop. Collects the two taps of each throw as whole milliseconds
@@ -42,7 +63,14 @@ const DARTS_SHOWN = 3
  * Two stacked canvases: the static board underneath, and an overlay redrawn
  * every frame with the aim lines and darts.
  */
-export function ThrowBoard({ puzzle, enabled, visitOpen, initialDarts, onThrow }: Props) {
+export function ThrowBoard({
+  puzzle,
+  enabled,
+  visitOpen,
+  initialDarts,
+  onThrow,
+  celebrate = 0,
+}: Props) {
   const stackRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLCanvasElement>(null)
   const [phase, setPhase] = useState<Phase>('aimX')
@@ -71,8 +99,14 @@ export function ThrowBoard({ puzzle, enabled, visitOpen, initialDarts, onThrow }
       resolvedAt: -Infinity,
     }))
 
+    // When the scene has settled and been drawn once, frames are skipped until
+    // something changes, so an idle board costs (almost) nothing.
+    let settledFrameDrawn = false
+    let lastTapAt = -Infinity
+
     const setLoopPhase = (next: Phase) => {
       phase = next
+      settledFrameDrawn = false
       setPhase(next)
     }
 
@@ -85,13 +119,16 @@ export function ThrowBoard({ puzzle, enabled, visitOpen, initialDarts, onThrow }
     const tap = () => {
       if (!propsRef.current.enabled) return
       const now = performance.now()
+      if (now - lastTapAt < MIN_TAP_GAP_MS) return // a double tap, not two taps
       // Whole milliseconds: the exact numbers the server will replay.
       const elapsed = Math.round(now - start)
       if (phase === 'aimX') {
+        lastTapAt = now
         if (elapsed > MAX_THROW_MS) return startThrow(now) // left idle too long
         lockX = elapsed
         setLoopPhase('aimY')
       } else if (phase === 'aimY') {
+        lastTapAt = now
         if (elapsed > MAX_THROW_MS) return startThrow(now)
         const result = resolveThrow(puzzle, { lockX, lockY: elapsed })
         darts.push({ result, resolvedAt: now })
@@ -100,12 +137,14 @@ export function ThrowBoard({ puzzle, enabled, visitOpen, initialDarts, onThrow }
         setLastInput(result.input)
         propsRef.current.onThrow(result)
       } else if (now - darts[darts.length - 1].resolvedAt >= DART_FLIGHT_MS) {
+        lastTapAt = now
         startThrow(now) // ignore taps while the dart is still in the air
       }
     }
 
     const onPointerDown = (e: PointerEvent) => {
-      if (e.button !== 0) return
+      // One finger at a time: a second finger touching down isn't another tap.
+      if (e.button !== 0 || !e.isPrimary) return
       e.preventDefault()
       tap()
     }
@@ -126,20 +165,29 @@ export function ThrowBoard({ puzzle, enabled, visitOpen, initialDarts, onThrow }
     const draw = () => {
       // Resize the backing store if the CSS size or pixel ratio changed.
       const rect = canvas.getBoundingClientRect()
-      const dpr = window.devicePixelRatio || 1
+      const dpr = canvasDpr(OVERLAY_MAX_DPR)
       if (
         !surface ||
         Math.round(rect.width * dpr) !== canvas.width ||
         Math.round(rect.height * dpr) !== canvas.height
       ) {
-        surface = setupCanvas(canvas)
+        surface = setupCanvas(canvas, OVERLAY_MAX_DPR)
+        settledFrameDrawn = false
       }
-      const { ctx, width, height } = surface
-      ctx.clearRect(0, 0, width, height)
 
       const now = performance.now()
       const elapsed = now - start
       const last = darts[darts.length - 1]
+      const settled =
+        phase === 'landed' && last !== undefined && now - last.resolvedAt > SCENE_SETTLE_MS
+      if (settled && settledFrameDrawn) {
+        frame = requestAnimationFrame(draw)
+        return
+      }
+      settledFrameDrawn = settled
+
+      const { ctx, width, height } = surface
+      ctx.clearRect(0, 0, width, height)
       let aim: ThrowScene['aim'] = null
       if (phase === 'aimX' && propsRef.current.enabled) {
         aim = {
@@ -185,6 +233,14 @@ export function ThrowBoard({ puzzle, enabled, visitOpen, initialDarts, onThrow }
     }
   }, [puzzle, startingDarts])
 
+  // Checkout: a short shake (skipped for players who prefer reduced motion).
+  useEffect(() => {
+    const stack = stackRef.current
+    if (!celebrate || !stack) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    stack.animate(SHAKE, { duration: 380, easing: 'ease-out' })
+  }, [celebrate])
+
   const prompt = !enabled
     ? ''
     : phase === 'aimX'
@@ -202,6 +258,12 @@ export function ThrowBoard({ puzzle, enabled, visitOpen, initialDarts, onThrow }
       >
         <BoardCanvas className="layer" />
         <canvas ref={overlayRef} className="layer" aria-hidden="true" />
+        {celebrate > 0 && (
+          // Keyed so each checkout mounts a fresh element and replays the animation.
+          <div key={celebrate} className="checkout-flash" aria-hidden="true">
+            <span>CHECKOUT!</span>
+          </div>
+        )}
       </div>
       <p className="muted throw-prompt">{prompt}</p>
     </>

@@ -9,6 +9,8 @@ type Props = {
   steps: readonly RoundStep[]
   hintOn: boolean
   onToggleHint: () => void
+  muted: boolean
+  onToggleMute: () => void
 }
 
 /** Compact dart label for the visit slots. */
@@ -32,16 +34,16 @@ function message(round: RoundState, last: RoundStep | undefined): string {
 }
 
 /** Current target, remaining score, this visit's darts, total darts and the checkout hint. */
-export function Hud({ round, steps, hintOn, onToggleHint }: Props) {
+export function Hud({ round, steps, hintOn, onToggleHint, muted, onToggleMute }: Props) {
   const last = steps[steps.length - 1]
   // The darts currently on the board: the latest visit, ended or not.
   const visit = splitVisits(steps).at(-1)
   const slots = [0, 1, 2].map((i) => visit?.hits[i])
   const route = round.finished ? null : findCheckout(round.remaining)
 
-  const toggleHint = (e: MouseEvent<HTMLButtonElement>) => {
-    onToggleHint()
-    // After a mouse or touch click, drop focus so Space goes back to throwing.
+  // After a mouse or touch click, drop focus so Space goes back to throwing.
+  const clickThenBlur = (action: () => void) => (e: MouseEvent<HTMLButtonElement>) => {
+    action()
     if (e.detail > 0) e.currentTarget.blur()
   }
 
@@ -86,7 +88,7 @@ export function Hud({ round, steps, hintOn, onToggleHint }: Props) {
         <button
           className={`toggle${hintOn ? ' on' : ''}`}
           aria-pressed={hintOn}
-          onClick={toggleHint}
+          onClick={clickThenBlur(onToggleHint)}
         >
           Hint
         </button>
@@ -97,6 +99,15 @@ export function Hud({ round, steps, hintOn, onToggleHint }: Props) {
               : 'No checkout yet: set one up'
             : ''}
         </span>
+        <button
+          className={`toggle sound${muted ? '' : ' on'}`}
+          aria-pressed={!muted}
+          aria-label="Sound"
+          title={muted ? 'Sound off' : 'Sound on'}
+          onClick={clickThenBlur(onToggleMute)}
+        >
+          {muted ? '🔇' : '🔊'}
+        </button>
       </div>
 
       <p className="message" aria-live="polite">
