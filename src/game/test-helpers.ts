@@ -1,6 +1,10 @@
 /** Helpers for tests only. Not imported by app code. */
 
-import type { Dart } from './checkout'
+import { scoreHit, type Hit } from './board'
+import { findCheckout, type Dart } from './checkout'
+import { generateDailyPuzzle, type DailyPuzzle } from './puzzle'
+import { dartOutcome, playThrow, startRound } from './round'
+import { aimPoint, resolveThrow, type ThrowInput } from './throw'
 
 /**
  * Independent of the solver: is `route` a legal double-out finish for `score`?
@@ -16,4 +20,52 @@ export function isLegalCheckoutRoute(score: number, route: readonly Dart[]): boo
   }
   if (route[route.length - 1].multiplier !== 2) return false
   return route.reduce((sum, d) => sum + d.segment * d.multiplier, 0) === score
+}
+
+/**
+ * Searches tap times for a throw whose result satisfies `wanted`. Tries the
+ * taps whose aim point already scores what's wanted first (cheap), then
+ * everything. Deterministic: always returns the same input.
+ */
+export function findInput(
+  puzzle: DailyPuzzle,
+  wanted: (hit: Hit) => boolean,
+  stepMs = 3,
+): ThrowInput | null {
+  const cycle = Math.ceil(2000 / puzzle.sweepSpeed) // one full back-and-forth
+  for (const aimMustMatch of [true, false]) {
+    for (let lockX = 0; lockX < cycle; lockX += stepMs) {
+      for (let dy = 0; dy < cycle; dy += stepMs) {
+        const input = { lockX, lockY: lockX + dy }
+        if (aimMustMatch) {
+          const aim = aimPoint(input, puzzle.sweepSpeed)
+          if (!wanted(scoreHit(aim.x, aim.y))) continue
+        }
+        if (wanted(resolveThrow(puzzle, input).hit)) return input
+      }
+    }
+  }
+  return null
+}
+
+/**
+ * A bot that plays a day's round to the finish with real throw inputs: each
+ * dart aims for the first dart of the solver's checkout route (or T20 when
+ * there's no route yet). Returns the inputs, ready for replayRound.
+ */
+export function playRoundToFinish(date: string): ThrowInput[] {
+  const puzzle = generateDailyPuzzle(date)
+  let state = startRound(puzzle)
+  const inputs: ThrowInput[] = []
+  while (!state.finished) {
+    const want = findCheckout(state.remaining)?.[0] ?? { segment: 20, multiplier: 3 }
+    const remaining = state.remaining
+    const input =
+      findInput(puzzle, (h) => h.segment === want.segment && h.multiplier === want.multiplier) ??
+      findInput(puzzle, (h) => h.points > 0 && dartOutcome(remaining, h) !== 'bust')
+    if (!input) throw new Error(`Bot found no useful throw at ${remaining}`)
+    state = playThrow(state, puzzle, input).state
+    inputs.push(input)
+  }
+  return inputs
 }

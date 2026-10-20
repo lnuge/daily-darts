@@ -111,6 +111,22 @@ the resulting state to `src/render`.
   renderer draws aim lines with the same `sweepPosition`, so the line on
   screen is the line that locks.
 
+## Round rules
+
+- `src/game/round.ts`, a pure state machine. `applyHit(state, hit)` is the
+  rules core; `playThrow` resolves taps first; `replayRound(date, inputs)`
+  replays a whole round and is what the server runs. Steps report
+  `outcome` (`score`/`bust`/`checkout`) and `targetDone` for the UI.
+- Three targets in order. Finish on exactly 0 with a double (bullseye counts).
+  Bust: below 0, leaving 1, or 0 without a double. A bust resets to the
+  visit's starting score and ends the visit; the dart still counts.
+- 3 darts per visit. A target ends after 30 darts (`MAX_DARTS_PER_TARGET`)
+  and counts as 30, even if the 30th dart busts.
+- `replayRound` throws on any invalid input or on inputs after the round
+  finished. A partial input list gives an unfinished state (used to resume).
+- Tests: `playRoundToFinish` in `test-helpers.ts` is a bot that finds real tap
+  inputs finishing a day's round; use it for end-to-end replay tests.
+
 ## Commands
 
 ```
