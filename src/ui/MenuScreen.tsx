@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { rankedStatus } from '../lib/progress'
 import type { Navigate } from './App'
 import { AccountBar } from './AccountBar'
+import { LegalLinks } from './LegalScreen'
 import { BoardCanvas } from './BoardCanvas'
 
 type Props = {
@@ -43,6 +44,7 @@ export function MenuScreen({ today, onNavigate, onHowToPlay }: Props) {
         How to play
       </button>
       <AccountBar />
+      <LegalLinks onNavigate={onNavigate} />
     </section>
   )
 }

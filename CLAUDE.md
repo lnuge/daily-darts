@@ -278,7 +278,8 @@ Before considering a change done: `npm run typecheck`, `npm run lint`,
 ## URLs and deployment
 
 - Every screen has a URL (`src/ui/routes.ts`, pure and tested): `/`, `/play`,
-  `/practice`, `/practice/<date>`, `/leaderboard`, `/leaderboard/<date>`, `/profile`.
+  `/practice`, `/practice/<date>`, `/leaderboard`, `/leaderboard/<date>`, `/profile`,
+  `/privacy`, `/terms`.
   `App` pushes history on navigation and listens for `popstate`; unknown or invalid
   paths fall back to the nearest screen. When tidying the URL on load, keep
   `location.search`/`hash`: OAuth returns a one-time code there.
@@ -291,6 +292,16 @@ Before considering a change done: `npm run typecheck`, `npm run lint`,
   via the `siteUrl` plugin in `vite.config.ts`.
 - `public/og-image.png` (1200x630) and `public/apple-touch-icon.png` were rendered with
   the game's own `drawBoard`; regenerate them if the board's look changes.
+
+## Privacy policy and terms
+
+- `src/ui/LegalScreen.tsx`: `/privacy` and `/terms`, linked from the menu and profile
+  (`LegalLinks`). Google's OAuth consent screen links to them. The contact address is the
+  build variable `VITE_CONTACT_EMAIL`. The how-to dialog never opens over these pages.
+- The privacy policy describes what's actually collected (local storage keys, guest
+  accounts, rounds incl. tap timings, Google name/email/picture via Supabase, host logs)
+  and that nothing else is. If you add analytics, ads, cookies, new stored data or new
+  providers, update it and `LAST_UPDATED` in the same change.
 
 ## Notes
 

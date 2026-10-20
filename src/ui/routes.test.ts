@@ -12,6 +12,8 @@ describe('routes', () => {
     ['/leaderboard', { name: 'leaderboard' }],
     ['/leaderboard/2026-11-20', { name: 'leaderboard', date: '2026-11-20' }],
     ['/profile', { name: 'profile' }],
+    ['/privacy', { name: 'privacy' }],
+    ['/terms', { name: 'terms' }],
   ])('round-trips %s', (path, route) => {
     expect(routeFromPath(path, TODAY)).toEqual(route)
     expect(pathFor(route)).toBe(path)
@@ -22,7 +24,7 @@ describe('routes', () => {
     expect(routeFromPath('/play/', TODAY)).toEqual({ name: 'game', mode: 'ranked', date: TODAY })
   })
 
-  it.each(['/nope', '/play/extra', '/profile/x', '/a/b/c', '/index.html'])(
+  it.each(['/nope', '/play/extra', '/profile/x', '/terms/x', '/a/b/c', '/index.html'])(
     'sends unknown path %s to the menu',
     (path) => {
       expect(routeFromPath(path, TODAY)).toEqual({ name: 'menu' })

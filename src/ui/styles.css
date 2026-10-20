@@ -737,3 +737,53 @@ kbd {
   font: inherit;
   font-size: 0.85em;
 }
+
+/* ---------- Privacy policy and terms ---------- */
+
+.legal-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.legal-links a,
+.legal-body a {
+  color: inherit;
+  text-underline-offset: 3px;
+}
+
+.legal-links a {
+  /* Comfortable tap target without making the footer look like buttons. */
+  padding: 12px 4px;
+}
+
+.legal-body {
+  max-width: 640px;
+  text-align: left;
+  line-height: 1.55;
+}
+
+.legal-body h2 {
+  margin: 1.6em 0 0.4em;
+  font-size: 1.15rem;
+}
+
+.legal-body h3 {
+  margin: 1.2em 0 0.3em;
+  font-size: 1rem;
+}
+
+.legal-body p,
+.legal-body ul {
+  margin: 0 0 0.8em;
+}
+
+.legal-body ul {
+  padding-left: 1.3em;
+}
+
+.legal-body li + li {
+  margin-top: 0.3em;
+}

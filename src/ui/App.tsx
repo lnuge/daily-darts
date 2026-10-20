@@ -6,6 +6,7 @@ import { loadJson, saveJson } from '../lib/storage'
 import { GameScreen } from './GameScreen'
 import { HowToPlay } from './HowToPlay'
 import { LeaderboardScreen } from './LeaderboardScreen'
+import { PrivacyScreen, TermsScreen } from './LegalScreen'
 import { MenuScreen } from './MenuScreen'
 import { PracticeScreen } from './PracticeScreen'
 import { ProfileScreen } from './ProfileScreen'
@@ -37,6 +38,8 @@ function initialRoute(): Route {
   return opening
 }
 
+const isLegal = (route: Route) => route.name === 'privacy' || route.name === 'terms'
+
 export function App() {
   const [route, setRouteState] = useState<Route>(initialRoute)
 
@@ -55,8 +58,11 @@ export function App() {
   // Rolls over at local midnight. A game keeps the date it was started with,
   // so a round under way at midnight stays on its own puzzle.
   const today = useToday()
-  // Shown automatically on the first visit, and from the menu after that.
-  const [howTo, setHowTo] = useState(() => loadJson<boolean>('howto-seen') !== true)
+  // Shown automatically on the first visit, and from the menu after that. Not over
+  // the privacy policy or terms: people (and Google's reviewers) arrive there by link.
+  const [howTo, setHowTo] = useState(
+    () => loadJson<boolean>('howto-seen') !== true && !isLegal(route),
+  )
   const closeHowTo = () => {
     saveJson('howto-seen', true)
     setHowTo(false)
@@ -84,6 +90,8 @@ export function App() {
       {route.name === 'leaderboard' && (
         <LeaderboardScreen today={today} date={route.date} onNavigate={setRoute} />
       )}
+      {route.name === 'privacy' && <PrivacyScreen onNavigate={setRoute} />}
+      {route.name === 'terms' && <TermsScreen onNavigate={setRoute} />}
       <HowToPlay open={howTo} onClose={closeHowTo} />
     </main>
   )

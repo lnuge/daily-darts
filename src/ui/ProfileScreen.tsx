@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
 import { AccountBar } from './AccountBar'
+import { LegalLinks } from './LegalScreen'
 import type { Navigate } from './App'
 import { StatsPanel } from './PlayerStats'
 import { usePlayerStats } from './usePlayerStats'
@@ -45,6 +46,7 @@ export function ProfileScreen({ today, onNavigate }: Props) {
           Menu
         </button>
       </div>
+      <LegalLinks onNavigate={onNavigate} />
     </section>
   )
 }

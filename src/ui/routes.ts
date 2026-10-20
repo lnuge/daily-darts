@@ -9,6 +9,7 @@
  *   /leaderboard               today's leaderboard
  *   /leaderboard/2026-10-15    that day's leaderboard
  *   /profile                   stats and account
+ *   /privacy, /terms           privacy policy and terms of service
  *
  * On Cloudflare, any path that isn't a file serves index.html (see
  * wrangler.jsonc), and routeFromPath decides what to show.
@@ -25,6 +26,8 @@ export type Route =
   | { name: 'practice' }
   | { name: 'leaderboard'; date?: string }
   | { name: 'profile' }
+  | { name: 'privacy' }
+  | { name: 'terms' }
 
 export function pathFor(route: Route): string {
   switch (route.name) {
@@ -38,6 +41,10 @@ export function pathFor(route: Route): string {
       return route.date ? `/leaderboard/${route.date}` : '/leaderboard'
     case 'profile':
       return '/profile'
+    case 'privacy':
+      return '/privacy'
+    case 'terms':
+      return '/terms'
   }
 }
 
@@ -79,6 +86,9 @@ export function routeFromPath(path: string, today: string): Route {
         : { name: 'leaderboard' }
     case 'profile':
       return second === undefined ? { name: 'profile' } : { name: 'menu' }
+    case 'privacy':
+    case 'terms':
+      return second === undefined ? { name: first } : { name: 'menu' }
     default:
       return { name: 'menu' }
   }

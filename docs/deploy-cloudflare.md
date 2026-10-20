@@ -74,6 +74,7 @@ Worker; this app has none):
 | `VITE_SUPABASE_URL`             | `https://your-project-ref.supabase.co`                                         |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | your `sb_publishable_...` key (or the anon key)                                |
 | `VITE_SITE_URL`                 | `https://your-domain` once step 4 is done (until then, your `workers.dev` URL) |
+| `VITE_CONTACT_EMAIL`            | the email shown on `/privacy` and `/terms` for questions and deletion requests |
 | `NODE_VERSION`                  | `22`                                                                           |
 
 - Use the same two Supabase values as your `.env.local`. They're public by design
@@ -109,6 +110,11 @@ Then point everything else at the new address:
   `https://dailydarts.com` to **Authorized JavaScript origins**. (The redirect URI
   stays the Supabase callback URL.) If the consent screen is still in **Testing**,
   publish it so anyone can sign in.
+- **Google Cloud → Google Auth Platform → Branding:** app name `Daily Darts`, home page
+  `https://dailydarts.com`, privacy policy `https://dailydarts.com/privacy`, terms
+  `https://dailydarts.com/terms`, authorized domains `dailydarts.com` and
+  `your-project-ref.supabase.co`. Skip the logo unless you want to go through Google's
+  verification (a logo requires it).
 
 ## 5. Check link previews
 
@@ -132,6 +138,8 @@ pass.
       round continues exactly where it was.
 - [ ] Refresh on `/play`, `/leaderboard`, `/practice`, `/profile`: each reloads the same
       screen (no 404). Back button works.
+- [ ] **Privacy** and **Terms** at the foot of the menu open `/privacy` and `/terms`, and
+      both show your contact email (not a "not set" warning).
 
 **Submitting a round**
 
