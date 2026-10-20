@@ -3,6 +3,7 @@ import type { DailyPuzzle } from '../game/puzzle'
 import type { Rating, RoundSummary } from '../game/summary'
 import { formatCountdown, puzzleEndsAt, todayKey } from '../lib/daily'
 import { buildShareText, copyText } from '../lib/share'
+import { AccountBar } from './AccountBar'
 import type { GameMode, Navigate } from './App'
 
 type Props = {
@@ -132,6 +133,7 @@ export function ResultsScreen({ mode, puzzle, summary, onNavigate }: Props) {
                 : ''}
           </p>
           <NextPuzzle date={puzzle.date} onNavigate={onNavigate} />
+          <AccountBar />
         </>
       ) : (
         <div className="actions">

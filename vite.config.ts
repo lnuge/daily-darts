@@ -5,7 +5,7 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   plugins: [react()],
   test: {
-    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'supabase/tests/**/*.test.ts'],
     environment: 'node',
   },
 })

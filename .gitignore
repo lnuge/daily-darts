@@ -24,4 +24,8 @@ dist-ssr
 *.sw?
 
 coverage
+
+# Secrets: every .env file except the committed example.
 .env
+.env.*
+!.env.example

@@ -179,10 +179,25 @@ Before considering a change done: `npm run typecheck`, `npm run lint`,
 - For anything that affects scoring, add a replay test: fixed seed + fixed
   input list → assert the exact final state/score.
 
-## Environment
+## Supabase
 
-Supabase config goes in `.env.local` (gitignored). See `.env.example`. The app
-runs without it; `supabase` from `src/lib/supabase.ts` is `null` when unset.
+- Setup guide for the developer: `docs/supabase-setup.md`.
+- Client config goes in `.env.local` (all `.env*` files except `.env.example` are
+  gitignored). Only the publishable key ever goes in a `VITE_` variable; the secret /
+  service_role key must never reach the client. The app runs without Supabase:
+  `supabase` from `src/lib/supabase.ts` is `null` when unset.
+- Schema changes are new files in `supabase/migrations/` (never edit an applied one).
+  Apply with `npm run db:push`. `supabase/config.toml` mirrors the intended auth
+  settings (anonymous sign-ins, manual linking, Google).
+- RLS is tested in `supabase/tests/rls.test.ts`: the migrations run in PGlite on a stub of
+  Supabase's `auth` schema and roles. Add a test for every policy or grant change. Test
+  inserts without `RETURNING` (it applies SELECT policies too and hides INSERT bugs).
+- Security model: anyone reads profiles and verified rounds; players insert only their
+  own rounds and only the data columns (never `verified`, `id`, `created_at`); only the
+  service role updates or deletes rounds or sets `verified`.
+- Auth (`src/lib/auth.ts`): a guest (anonymous) session starts lazily when a ranked round
+  finishes; "Sign in with Google" links Google to the guest (`linkIdentity`) so the user
+  id and rounds carry over. `ensureSession` dedupes concurrent calls; keep it that way.
 
 ## Notes
 

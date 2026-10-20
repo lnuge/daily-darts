@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { rankedStatus } from '../lib/progress'
 import type { Navigate } from './App'
+import { AccountBar } from './AccountBar'
 import { BoardCanvas } from './BoardCanvas'
 
 type Props = {
@@ -34,6 +35,7 @@ export function MenuScreen({ today, onNavigate }: Props) {
           Leaderboard
         </button>
       </div>
+      <AccountBar />
     </section>
   )
 }

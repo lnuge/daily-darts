@@ -3,6 +3,7 @@ import { generateDailyPuzzle } from '../game/puzzle'
 import { playThrow, startRound, type ThrowStep } from '../game/round'
 import { splitVisits, summarizeRound } from '../game/summary'
 import type { ThrowResult } from '../game/throw'
+import { ensureSession } from '../lib/auth'
 import { restoreRankedSteps, saveRankedInputs } from '../lib/progress'
 import { loadJson, saveJson } from '../lib/storage'
 import type { GameMode, Navigate } from './App'
@@ -64,6 +65,13 @@ export function GameScreen({ mode, date, onNavigate }: Props) {
       steps.map((s) => s.throw.input),
     )
   }, [ranked, date, steps])
+
+  // A finished ranked round needs an owner to be submitted: start a guest
+  // session now if the player has none. (Only now, so idle visitors don't
+  // create accounts.)
+  useEffect(() => {
+    if (ranked && round.finished) void ensureSession()
+  }, [ranked, round.finished])
 
   const toggleHint = () =>
     setHintOn((on) => {
