@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createRng, hashString } from './rng'
+import { createRng, hashString } from './rng.ts'
 
 describe('hashString', () => {
   it('matches known FNV-1a values', () => {

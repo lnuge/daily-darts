@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { findCheckout } from './checkout'
-import { addDays } from './date'
+import { findCheckout } from './checkout.ts'
+import { addDays } from './date.ts'
 import {
   LAUNCH_DATE,
   SWEEP_SPEED_RANGE,
@@ -9,8 +9,8 @@ import {
   generateDailyPuzzle,
   getDailySeed,
   type DailyPuzzle,
-} from './puzzle'
-import { isLegalCheckoutRoute } from './test-helpers'
+} from './puzzle.ts'
+import { isLegalCheckoutRoute } from './test-helpers.ts'
 
 /** Every date key from `start`, `count` days long. */
 function dateRange(start: string, count: number): string[] {

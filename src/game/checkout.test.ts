@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { BOARD_DARTS, MAX_CHECKOUT, dartLabel, findCheckout, isCheckout } from './checkout'
-import { isLegalCheckoutRoute } from './test-helpers'
+import { BOARD_DARTS, MAX_CHECKOUT, dartLabel, findCheckout, isCheckout } from './checkout.ts'
+import { isLegalCheckoutRoute } from './test-helpers.ts'
 
 /** Scores 2-170 with no three-dart double-out finish ("bogey numbers"). */
 const IMPOSSIBLE = [159, 162, 163, 165, 166, 168, 169]

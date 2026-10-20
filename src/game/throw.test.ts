@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { hitLabel, scoreHit } from './board'
-import { addDays } from './date'
-import { LAUNCH_DATE, WOBBLE_RANGE, generateDailyPuzzle, type DailyPuzzle } from './puzzle'
-import { createRng } from './rng'
+import { hitLabel, scoreHit } from './board.ts'
+import { addDays } from './date.ts'
+import { LAUNCH_DATE, WOBBLE_RANGE, generateDailyPuzzle, type DailyPuzzle } from './puzzle.ts'
+import { createRng } from './rng.ts'
 import {
   MAX_THROW_MS,
   SWEEP_EXTENT,
@@ -12,7 +12,7 @@ import {
   sweepPosition,
   validateThrowInput,
   type ThrowInput,
-} from './throw'
+} from './throw.ts'
 
 const launch = generateDailyPuzzle(LAUNCH_DATE)
 

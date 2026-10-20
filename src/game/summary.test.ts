@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { LAUNCH_DATE, generateDailyPuzzle } from './puzzle'
-import { applyHit, createRound, replaySteps, type RoundStep } from './round'
-import { minDarts, rateTarget, splitVisits, summarizeRound, targetPar } from './summary'
-import { hitFromLabel, playRoundToFinish } from './test-helpers'
+import { LAUNCH_DATE, generateDailyPuzzle } from './puzzle.ts'
+import { applyHit, createRound, replaySteps, type RoundStep } from './round.ts'
+import { minDarts, rateTarget, splitVisits, summarizeRound, targetPar } from './summary.ts'
+import { hitFromLabel, playRoundToFinish } from './test-helpers.ts'
 
 /** Plays labelled darts at a round over `targets`; returns the steps. */
 function play(targets: number[], labels: string[]): RoundStep[] {

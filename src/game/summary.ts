@@ -3,9 +3,9 @@
  * Pure functions over the steps from round.ts.
  */
 
-import type { Hit } from './board'
-import { findCheckout } from './checkout'
-import type { RoundStep } from './round'
+import type { Hit } from './board.ts'
+import { findCheckout } from './checkout.ts'
+import type { RoundStep } from './round.ts'
 
 /** Extra darts over the minimum that still count as par: one spare visit. */
 export const PAR_ALLOWANCE = 3

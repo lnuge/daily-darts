@@ -194,6 +194,35 @@ describe('rounds: reading', () => {
   })
 })
 
+describe('rounds: throw inputs', () => {
+  it("are hidden from everyone but the server, so nobody can copy a top round's throws", async () => {
+    for (const who of [{ role: 'anon' }, { role: 'authenticated', id: alice }] as const) {
+      await expect(as(who, 'select inputs from public.rounds')).rejects.toThrow(/permission denied/)
+      await expect(as(who, 'select * from public.rounds')).rejects.toThrow(/permission denied/)
+    }
+    // Not even your own: the client never needs them back.
+    await expect(
+      as(
+        { role: 'authenticated', id: bob },
+        `select inputs from public.rounds where user_id = '${bob}'`,
+      ),
+    ).rejects.toThrow(/permission denied/)
+  })
+
+  it('leave every other column readable', async () => {
+    const { rows } = await as(
+      { role: 'anon' },
+      'select id, user_id, puzzle_date, total_darts, per_target, verified, created_at from public.rounds',
+    )
+    expect(rows).toHaveLength(1)
+  })
+
+  it('are readable by the server, to replay rounds', async () => {
+    const { rows } = await as({ role: 'service_role' }, 'select inputs from public.rounds')
+    expect(rows.length).toBeGreaterThan(0)
+  })
+})
+
 describe('rounds: inserting', () => {
   it('lets a signed-in player insert their own round, unverified', async () => {
     const { rows } = await as<{ verified: boolean }>(

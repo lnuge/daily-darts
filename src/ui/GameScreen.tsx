@@ -3,13 +3,13 @@ import { generateDailyPuzzle } from '../game/puzzle'
 import { playThrow, startRound, type ThrowStep } from '../game/round'
 import { splitVisits, summarizeRound } from '../game/summary'
 import type { ThrowResult } from '../game/throw'
-import { ensureSession } from '../lib/auth'
 import { restoreRankedSteps, saveRankedInputs } from '../lib/progress'
 import { loadJson, saveJson } from '../lib/storage'
 import type { GameMode, Navigate } from './App'
 import { Hud } from './Hud'
 import { ResultsScreen } from './ResultsScreen'
 import { ThrowBoard } from './ThrowBoard'
+import { useRoundSubmission } from './useRoundSubmission'
 
 type Props = {
   mode: GameMode
@@ -66,12 +66,14 @@ export function GameScreen({ mode, date, onNavigate }: Props) {
     )
   }, [ranked, date, steps])
 
-  // A finished ranked round needs an owner to be submitted: start a guest
-  // session now if the player has none. (Only now, so idle visitors don't
-  // create accounts.)
-  useEffect(() => {
-    if (ranked && round.finished) void ensureSession()
-  }, [ranked, round.finished])
+  // A finished ranked round goes to the server to be replayed and verified.
+  // (This also starts a guest session if needed: only now, so idle visitors
+  // don't create accounts.)
+  const submission = useRoundSubmission(
+    ranked && round.finished,
+    date,
+    steps.map((s) => s.throw.input),
+  )
 
   const toggleHint = () =>
     setHintOn((on) => {
@@ -91,6 +93,7 @@ export function GameScreen({ mode, date, onNavigate }: Props) {
         mode={mode}
         puzzle={puzzle}
         summary={summarizeRound(steps, puzzle.targets)}
+        submission={submission}
         onNavigate={onNavigate}
       />
     )

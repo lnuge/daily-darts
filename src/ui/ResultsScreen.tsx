@@ -4,12 +4,15 @@ import type { Rating, RoundSummary } from '../game/summary'
 import { formatCountdown, puzzleEndsAt, todayKey } from '../lib/daily'
 import { buildShareText, copyText } from '../lib/share'
 import { AccountBar } from './AccountBar'
+import type { SubmissionStatus } from './useRoundSubmission'
 import type { GameMode, Navigate } from './App'
 
 type Props = {
   mode: GameMode
   puzzle: DailyPuzzle
   summary: RoundSummary
+  /** How sending the round to the server went (ranked only). */
+  submission?: { status: SubmissionStatus; retry: () => void }
   onNavigate: Navigate
 }
 
@@ -54,7 +57,44 @@ function NextPuzzle({ date, onNavigate }: { date: string; onNavigate: Navigate }
   )
 }
 
-export function ResultsScreen({ mode, puzzle, summary, onNavigate }: Props) {
+/** Whether the round has been verified and saved on the server. */
+function SubmissionLine({ status, retry }: { status: SubmissionStatus; retry: () => void }) {
+  switch (status.kind) {
+    case 'idle':
+    case 'offline':
+      return null
+    case 'submitting':
+      return (
+        <p className="submission muted" role="status">
+          Saving your score…
+        </p>
+      )
+    case 'verified':
+    case 'already':
+      return (
+        <p className="submission ok" role="status">
+          ✓ Score verified and saved
+        </p>
+      )
+    case 'rejected':
+      return (
+        <p className="submission error" role="status">
+          Not ranked: {status.message}
+        </p>
+      )
+    case 'failed':
+      return (
+        <p className="submission error" role="status">
+          Couldn't save your score. {status.message}{' '}
+          <button className="link" onClick={retry}>
+            Try again
+          </button>
+        </p>
+      )
+  }
+}
+
+export function ResultsScreen({ mode, puzzle, summary, submission, onNavigate }: Props) {
   const ranked = mode === 'ranked'
   const shareText = buildShareText(puzzle.puzzleNumber, summary, siteUrl())
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
@@ -110,6 +150,8 @@ export function ResultsScreen({ mode, puzzle, summary, onNavigate }: Props) {
       <p>
         Best visit <strong>{summary.bestVisit}</strong>
       </p>
+
+      {ranked && submission && <SubmissionLine {...submission} />}
 
       {ranked ? (
         <>

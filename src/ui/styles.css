@@ -442,3 +442,18 @@ button.link {
 .account-error button + button {
   margin-left: 16px;
 }
+
+/* ---------- Score submission ---------- */
+
+.submission {
+  margin: 0;
+  font-weight: 600;
+}
+
+.submission.ok {
+  color: #2fbf63;
+}
+
+.submission.error {
+  color: #ff8a80;
+}

@@ -199,6 +199,28 @@ Before considering a change done: `npm run typecheck`, `npm run lint`,
   finishes; "Sign in with Google" links Google to the guest (`linkIdentity`) so the user
   id and rounds carry over. `ensureSession` dedupes concurrent calls; keep it that way.
 
+## Submitting rounds (edge function)
+
+- `supabase/functions/submit-round`: `submit.ts` holds the logic (pure apart from the
+  injected store and clock, tested in `supabase/tests/submit-round.test.ts`); `index.ts`
+  is the Deno entry (auth via `admin.auth.getUser(token)`, insert with the service role).
+- The function replays the inputs with a **synced copy** of `src/game` in
+  `supabase/functions/_shared/game`. Never edit the copy: change `src/game`, then run
+  `npm run sync:game`. `npm test` fails if the copy is stale.
+- Because Deno needs them, relative imports inside `src/game` must end in `.ts`, and
+  `src/game` must not import anything outside itself. The sync script enforces both.
+- Accepted dates: "today" somewhere on Earth (UTC-12 to UTC+14), plus `GRACE_HOURS`
+  after a date ends everywhere. Rejects future and closed dates, rounds that don't
+  replay or don't finish, and a second round for the same day (unique constraint).
+- Only the date and inputs are read from the request. `total_darts`, `per_target` and
+  `verified` always come from the server's replay.
+- `inputs` is hidden from anon/authenticated by column privileges (anyone could
+  otherwise copy a top round's throws). Client queries on `rounds` must name columns.
+- Client: `src/lib/submit.ts` + `useRoundSubmission` send a finished ranked round once,
+  remember success in `daily-darts:submitted:<date>`, treat `already_submitted` as done,
+  and offer a retry on network or server failure.
+- Deploy: `npm run functions:deploy` (syncs first, bundles server-side, no Docker).
+
 ## Notes
 
 - TypeScript is pinned to 6.0.x because typescript-eslint doesn't support

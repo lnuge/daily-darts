@@ -115,12 +115,31 @@ npm.cmd run dev
 If the Google account you pick already has its own Daily Darts account, the game offers to
 switch to it; rounds played as the guest stay with the guest.
 
+## 7. Deploy the submit-round function
+
+Finished ranked rounds are sent to the `submit-round` edge function, which replays the
+throws on the server and saves the verified score. Deploy it (and apply any new
+migrations) with:
+
+```powershell
+npm.cmd run db:push
+npm.cmd run functions:deploy
+```
+
+`functions:deploy` first copies the latest game code into the function, then bundles it
+on Supabase's servers, so Docker isn't needed. Run it again whenever `src/game` changes.
+
+Check: in the dashboard, **Edge Functions** lists `submit-round`. Finish today's round in
+the game: the results screen says **✓ Score verified and saved**, and **Table Editor →
+rounds** has your row with `verified = true`.
+
 ## How the data is protected
 
 From `supabase/migrations/20261020120000_profiles_and_rounds.sql`, checked by
 `supabase/tests/rls.test.ts` (runs in `npm test` on a real Postgres via PGlite):
 
-- Anyone can read profiles and **verified** rounds (the leaderboard).
+- Anyone can read profiles and **verified** rounds (the leaderboard), except each round's
+  throw `inputs`, which only the server can read (otherwise a top round could be copied).
 - Signed-in players, guests included, can insert rounds **for themselves only**. They can't
   set `verified`, `id` or `created_at`, so they can't self-verify or backdate a round.
 - Players can read their own rounds; nobody but the server can update or delete rounds.

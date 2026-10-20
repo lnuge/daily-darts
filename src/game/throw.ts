@@ -11,9 +11,9 @@
  * server can replay it.
  */
 
-import { scoreHit, type Hit } from './board'
-import { getDailySeed, type DailyPuzzle } from './puzzle'
-import { createRng, type Rng } from './rng'
+import { scoreHit, type Hit } from './board.ts'
+import { getDailySeed, type DailyPuzzle } from './puzzle.ts'
+import { createRng, type Rng } from './rng.ts'
 
 /**
  * The aim lines sweep between -SWEEP_EXTENT and +SWEEP_EXTENT in board

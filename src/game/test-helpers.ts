@@ -1,10 +1,10 @@
 /** Helpers for tests only. Not imported by app code. */
 
-import { scoreHit, type Hit } from './board'
-import { findCheckout, type Dart } from './checkout'
-import { generateDailyPuzzle, type DailyPuzzle } from './puzzle'
-import { dartOutcome, playThrow, startRound } from './round'
-import { aimPoint, resolveThrow, type ThrowInput } from './throw'
+import { scoreHit, type Hit } from './board.ts'
+import { findCheckout, type Dart } from './checkout.ts'
+import { generateDailyPuzzle, type DailyPuzzle } from './puzzle.ts'
+import { dartOutcome, playThrow, startRound } from './round.ts'
+import { aimPoint, resolveThrow, type ThrowInput } from './throw.ts'
 
 /**
  * Independent of the solver: is `route` a legal double-out finish for `score`?

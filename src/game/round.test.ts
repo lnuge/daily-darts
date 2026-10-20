@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { LAUNCH_DATE, generateDailyPuzzle } from './puzzle'
+import { LAUNCH_DATE, generateDailyPuzzle } from './puzzle.ts'
 import {
   MAX_DARTS_PER_TARGET,
   applyHit,
@@ -10,8 +10,8 @@ import {
   startRound,
   type RoundState,
   type RoundStep,
-} from './round'
-import { hitFromLabel as h, playRoundToFinish } from './test-helpers'
+} from './round.ts'
+import { hitFromLabel as h, playRoundToFinish } from './test-helpers.ts'
 
 /** Throws the labelled darts in order; returns every step. */
 function play(state: RoundState, labels: string[]): RoundStep[] {

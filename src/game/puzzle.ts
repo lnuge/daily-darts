@@ -1,6 +1,6 @@
-import { isCheckout } from './checkout'
-import { daysBetween, parseDateKey } from './date'
-import { createRng, hashString, type Rng } from './rng'
+import { isCheckout } from './checkout.ts'
+import { daysBetween, parseDateKey } from './date.ts'
+import { createRng, hashString, type Rng } from './rng.ts'
 
 /** Puzzle #0 is played on this date. Earlier dates get negative numbers. */
 export const LAUNCH_DATE = '2026-11-01'

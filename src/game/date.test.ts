@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addDays, daysBetween, fromDayNumber, parseDateKey, toDayNumber } from './date'
+import { addDays, daysBetween, fromDayNumber, parseDateKey, toDayNumber } from './date.ts'
 
 describe('parseDateKey', () => {
   it('accepts real dates, including leap days', () => {

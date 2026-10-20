@@ -15,9 +15,9 @@
  * Every function returns a new state and never mutates its input.
  */
 
-import type { Hit } from './board'
-import { generateDailyPuzzle, type DailyPuzzle } from './puzzle'
-import { resolveThrow, type ThrowInput, type ThrowResult } from './throw'
+import type { Hit } from './board.ts'
+import { generateDailyPuzzle, type DailyPuzzle } from './puzzle.ts'
+import { resolveThrow, type ThrowInput, type ThrowResult } from './throw.ts'
 
 export const DARTS_PER_VISIT = 3
 export const MAX_DARTS_PER_TARGET = 30

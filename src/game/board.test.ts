@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { RADIUS, WIRES, hitLabel, scoreHit } from './board'
+import { RADIUS, WIRES, hitLabel, scoreHit } from './board.ts'
 
 /**
  * Board point at `degrees` clockwise from straight up and radius `r`.
