@@ -1,9 +1,9 @@
 import { supabase } from '../lib/supabase'
-import type { Screen } from './App'
+import type { Navigate } from './App'
 
 type Props = {
   dateKey: string
-  onNavigate: (screen: Screen) => void
+  onNavigate: Navigate
 }
 
 export function LeaderboardScreen({ dateKey, onNavigate }: Props) {
@@ -16,7 +16,7 @@ export function LeaderboardScreen({ dateKey, onNavigate }: Props) {
           : 'Supabase is not configured. Copy .env.example to .env.local to enable.'}
       </p>
       <div className="actions">
-        <button className="secondary" onClick={() => onNavigate('menu')}>
+        <button className="secondary" onClick={() => onNavigate({ name: 'menu' })}>
           Menu
         </button>
       </div>

@@ -24,6 +24,8 @@ type Props = {
    * is false, the board is cleared, like pulling the darts out.
    */
   visitOpen: boolean
+  /** Darts already on the board when it opens (a resumed visit). Read once. */
+  initialDarts?: readonly ThrowResult[]
   /** Called once per throw with its resolved result. */
   onThrow: (result: ThrowResult) => void
 }
@@ -40,11 +42,12 @@ const DARTS_SHOWN = 3
  * Two stacked canvases: the static board underneath, and an overlay redrawn
  * every frame with the aim lines and darts.
  */
-export function ThrowBoard({ puzzle, enabled, visitOpen, onThrow }: Props) {
+export function ThrowBoard({ puzzle, enabled, visitOpen, initialDarts, onThrow }: Props) {
   const stackRef = useRef<HTMLDivElement>(null)
   const overlayRef = useRef<HTMLCanvasElement>(null)
   const [phase, setPhase] = useState<Phase>('aimX')
   const [lastInput, setLastInput] = useState<ThrowInput | null>(null)
+  const [startingDarts] = useState(() => initialDarts ?? [])
 
   // Latest props for the long-lived loop below, without restarting it.
   const propsRef = useRef({ enabled, visitOpen, onThrow })
@@ -62,7 +65,11 @@ export function ThrowBoard({ puzzle, enabled, visitOpen, onThrow }: Props) {
     let phase: Phase = 'aimX'
     let start = performance.now()
     let lockX = 0
-    const darts: { result: ThrowResult; resolvedAt: number }[] = []
+    // Restored darts are long landed: no fly-in, no score popup.
+    const darts: { result: ThrowResult; resolvedAt: number }[] = startingDarts.map((result) => ({
+      result,
+      resolvedAt: -Infinity,
+    }))
 
     const setLoopPhase = (next: Phase) => {
       phase = next
@@ -176,7 +183,7 @@ export function ThrowBoard({ puzzle, enabled, visitOpen, onThrow }: Props) {
       stack.removeEventListener('pointerdown', onPointerDown)
       window.removeEventListener('keydown', onKeyDown)
     }
-  }, [puzzle])
+  }, [puzzle, startingDarts])
 
   const prompt = !enabled
     ? ''

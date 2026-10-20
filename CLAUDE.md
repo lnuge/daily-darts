@@ -141,6 +141,21 @@ the resulting state to `src/render`.
 - The game screen keeps the round as a list of steps and derives every
   state from it with the same pure functions the server replays.
 
+## Saved progress, locking and practice
+
+- `src/lib/progress.ts`: the ranked round is saved as
+  `{ version: 1, inputs }` under `daily-darts:round:<date>` after every
+  throw. Restoring replays the inputs with `replaySteps`; a save that fails
+  to parse or replay is deleted. Never store derived state (scores etc.).
+- A finished ranked round is locked: the game opens on its results, and the
+  app starts there on load. This lock is client-side only; the server must
+  enforce one ranked round per player per day.
+- `useToday()` (`src/ui/useToday.ts`) rolls the date at local midnight
+  (`puzzleEndsAt` in `src/lib/daily.ts`, DST-safe). A game keeps the date it
+  started with; the results countdown targets the midnight after that date.
+- Practice (`mode: 'practice'`): any day from launch to yesterday (the last
+  30 days before launch). Never saved, marked "Unranked", no share.
+
 ## Commands
 
 ```

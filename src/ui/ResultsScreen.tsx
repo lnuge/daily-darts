@@ -1,13 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { DailyPuzzle } from '../game/puzzle'
 import type { Rating, RoundSummary } from '../game/summary'
+import { formatCountdown, puzzleEndsAt, todayKey } from '../lib/daily'
 import { buildShareText, copyText } from '../lib/share'
-import type { Screen } from './App'
+import type { GameMode, Navigate } from './App'
 
 type Props = {
+  mode: GameMode
   puzzle: DailyPuzzle
   summary: RoundSummary
-  onNavigate: (screen: Screen) => void
+  onNavigate: Navigate
 }
 
 const RATING_TEXT: Record<Rating, string> = {
@@ -21,7 +23,38 @@ function siteUrl(): string {
   return import.meta.env.VITE_SITE_URL || window.location.origin
 }
 
-export function ResultsScreen({ puzzle, summary, onNavigate }: Props) {
+/** Counts down to the local midnight when the next puzzle unlocks, then offers it. */
+function NextPuzzle({ date, onNavigate }: { date: string; onNavigate: Navigate }) {
+  const endsAt = puzzleEndsAt(date).getTime()
+  const [now, setNow] = useState(() => Date.now())
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  if (now >= endsAt) {
+    return (
+      <div className="next-puzzle">
+        <p>A new puzzle is ready!</p>
+        <button onClick={() => onNavigate({ name: 'game', mode: 'ranked', date: todayKey() })}>
+          Play today's puzzle
+        </button>
+      </div>
+    )
+  }
+  return (
+    <div className="next-puzzle">
+      <span className="muted">Next puzzle in</span>
+      <span className="countdown" role="timer" aria-live="off">
+        {formatCountdown(endsAt - now)}
+      </span>
+    </div>
+  )
+}
+
+export function ResultsScreen({ mode, puzzle, summary, onNavigate }: Props) {
+  const ranked = mode === 'ranked'
   const shareText = buildShareText(puzzle.puzzleNumber, summary, siteUrl())
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
 
@@ -32,8 +65,12 @@ export function ResultsScreen({ puzzle, summary, onNavigate }: Props) {
   return (
     <section className="screen results">
       <header className="title">
-        <h2>Round complete</h2>
-        <p className="muted">Daily Darts #{puzzle.puzzleNumber}</p>
+        <h2>{ranked ? 'Round complete' : 'Practice complete'}</h2>
+        {ranked ? (
+          <p className="muted">Daily Darts #{puzzle.puzzleNumber}</p>
+        ) : (
+          <p className="badge practice">Practice · {puzzle.date} · Unranked</p>
+        )}
       </header>
 
       <div className="total">
@@ -73,23 +110,37 @@ export function ResultsScreen({ puzzle, summary, onNavigate }: Props) {
         Best visit <strong>{summary.bestVisit}</strong>
       </p>
 
-      <pre className="share-preview" aria-label="Share text">
-        {shareText}
-      </pre>
-
-      <div className="actions">
-        <button onClick={share}>{copyState === 'copied' ? 'Copied!' : 'Share'}</button>
-        <button className="secondary" onClick={() => onNavigate('menu')}>
-          Menu
-        </button>
-      </div>
-      <p className="muted" aria-live="polite">
-        {copyState === 'copied'
-          ? 'Copied to your clipboard.'
-          : copyState === 'failed'
-            ? "Couldn't copy. Select the text above instead."
-            : ''}
-      </p>
+      {ranked ? (
+        <>
+          <pre className="share-preview" aria-label="Share text">
+            {shareText}
+          </pre>
+          <div className="actions">
+            <button onClick={share}>{copyState === 'copied' ? 'Copied!' : 'Share'}</button>
+            <button className="secondary" onClick={() => onNavigate({ name: 'practice' })}>
+              Practice
+            </button>
+            <button className="secondary" onClick={() => onNavigate({ name: 'menu' })}>
+              Menu
+            </button>
+          </div>
+          <p className="muted" aria-live="polite">
+            {copyState === 'copied'
+              ? 'Copied to your clipboard.'
+              : copyState === 'failed'
+                ? "Couldn't copy. Select the text above instead."
+                : ''}
+          </p>
+          <NextPuzzle date={puzzle.date} onNavigate={onNavigate} />
+        </>
+      ) : (
+        <div className="actions">
+          <button onClick={() => onNavigate({ name: 'practice' })}>Practice another day</button>
+          <button className="secondary" onClick={() => onNavigate({ name: 'menu' })}>
+            Menu
+          </button>
+        </div>
+      )}
     </section>
   )
 }
