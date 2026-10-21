@@ -411,6 +411,14 @@ input[aria-invalid='true'] {
   gap: 8px;
 }
 
+/* Taps anywhere throw, so no text selection, callouts or double-tap zoom. */
+.app:has(.screen.game) {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .game .board-frame {
   --board-size: min(100%, max(220px, 100dvh - 300px), 600px);
 }

@@ -1,10 +1,11 @@
 /**
- * Draws the throw overlay: sweeping aim lines, landed darts and the score
- * popup. Display only: positions and scores come from src/game/throw.ts.
+ * Draws the throw overlay: sweeping aim lines (with the bed under the
+ * crosshair lit up while aiming), landed darts and the score popup. Display
+ * only: positions and scores come from src/game/throw.ts and board.ts.
  */
 
-import { hitLabel, type Hit } from '../game/board'
-import { SURROUND_RADIUS, boardToCanvas, type BoardView } from './board'
+import { hitLabel, scoreHit, type Hit } from '../game/board'
+import { SURROUND_RADIUS, boardToCanvas, traceBed, type BoardView } from './board'
 
 /** How long the dart takes to fly in. */
 export const DART_FLIGHT_MS = 260
@@ -23,7 +24,8 @@ export const SCENE_SETTLE_MS =
 
 const COLORS = {
   aim: '#ffd23f',
-  aimOutline: 'rgba(0, 0, 0, 0.55)',
+  aimOutline: 'rgba(0, 0, 0, 0.6)',
+  bedFill: 'rgba(255, 255, 255, 0.38)',
   flight: '#2ec4ff',
   outline: '#0b0b0b',
   shaft: '#f7f7f7',
@@ -103,25 +105,46 @@ function drawAim(ctx: CanvasRenderingContext2D, view: BoardView, aim: AimOverlay
   ctx.arc(view.cx, view.cy, SURROUND_RADIUS * view.scale, 0, Math.PI * 2)
   ctx.clip()
 
+  // While the second line sweeps, light up the bed the crosshair is on, so
+  // the player sees exactly what they'd be aiming at. It previews the aim
+  // point only: the dart still scatters by the day's wobble.
+  const aiming = aim.x !== null && aim.y !== null && !aim.yLocked ? { x: aim.x, y: aim.y } : null
+  const aimedHit = aiming ? scoreHit(aiming.x, aiming.y) : null
+  if (aiming && aimedHit) {
+    ctx.save()
+    ctx.translate(view.cx, view.cy)
+    ctx.scale(view.scale, view.scale)
+    if (traceBed(ctx, aimedHit, Math.hypot(aiming.x, aiming.y))) {
+      ctx.fillStyle = COLORS.bedFill
+      ctx.fill()
+      ctx.strokeStyle = COLORS.aim
+      ctx.lineWidth = 2 / view.scale
+      ctx.stroke()
+    }
+    ctx.restore()
+  }
+
   const edge = SURROUND_RADIUS
   if (aim.x !== null) {
     // Locked lines dim slightly so the line still moving stands out.
-    ctx.globalAlpha = alpha * (aim.xLocked ? 0.75 : 1)
+    ctx.globalAlpha = alpha * (aim.xLocked ? 0.7 : 1)
     strokeLine(
       ctx,
       boardToCanvas(view, aim.x, -edge),
       boardToCanvas(view, aim.x, edge),
-      aim.xLocked ? 2 : 3,
+      aim.xLocked ? 1.5 : 2,
     )
+    drawEndMarks(ctx, view, aim.x, 'vertical')
   }
   if (aim.y !== null) {
-    ctx.globalAlpha = alpha * (aim.yLocked ? 0.75 : 1)
+    ctx.globalAlpha = alpha * (aim.yLocked ? 0.7 : 1)
     strokeLine(
       ctx,
       boardToCanvas(view, -edge, aim.y),
       boardToCanvas(view, edge, aim.y),
-      aim.yLocked ? 2 : 3,
+      aim.yLocked ? 1.5 : 2,
     )
+    drawEndMarks(ctx, view, aim.y, 'horizontal')
   }
   if (aim.x !== null && aim.y !== null) {
     // Ring where the lines cross: the aim point.
@@ -136,6 +159,71 @@ function drawAim(ctx: CanvasRenderingContext2D, view: BoardView, aim: AimOverlay
     ctx.lineWidth = 2
     ctx.stroke()
   }
+  ctx.restore()
+
+  if (aiming && aimedHit) drawAimLabel(ctx, view, aiming, aimedHit)
+}
+
+/**
+ * Small arrowheads where a line meets the rim, pointing along it, so the eye
+ * can follow the line without looking at the middle of the board.
+ */
+function drawEndMarks(
+  ctx: CanvasRenderingContext2D,
+  view: BoardView,
+  at: number,
+  direction: 'vertical' | 'horizontal',
+): void {
+  const rim = SURROUND_RADIUS * view.scale
+  const along = Math.sqrt(Math.max(0, rim * rim - (at * view.scale) ** 2))
+  const size = Math.max(7, view.scale * 0.045)
+  for (const sign of [-1, 1]) {
+    // Base on the rim, tip pointing inwards along the line.
+    const [bx, by] =
+      direction === 'vertical'
+        ? [view.cx + at * view.scale, view.cy + sign * along]
+        : [view.cx + sign * along, view.cy + at * view.scale]
+    const [dx, dy] = direction === 'vertical' ? [0, -sign] : [-sign, 0]
+    ctx.beginPath()
+    ctx.moveTo(bx + dx * size * 1.4, by + dy * size * 1.4)
+    ctx.lineTo(bx - dy * size * 0.7, by + dx * size * 0.7)
+    ctx.lineTo(bx + dy * size * 0.7, by - dx * size * 0.7)
+    ctx.closePath()
+    ctx.fillStyle = COLORS.aim
+    ctx.strokeStyle = COLORS.aimOutline
+    ctx.lineWidth = 1.5
+    ctx.fill()
+    ctx.stroke()
+  }
+}
+
+/** "T20" beside the crosshair while aiming: the bed it's on (or "Miss"). */
+function drawAimLabel(
+  ctx: CanvasRenderingContext2D,
+  view: BoardView,
+  aim: { x: number; y: number },
+  hit: Hit,
+): void {
+  const label = hit.multiplier === 0 ? 'Miss' : hitLabel(hit)
+  const fontSize = Math.max(14, Math.round(view.scale * 0.08))
+  const [px, py] = boardToCanvas(view, aim.x, aim.y)
+  ctx.save()
+  ctx.font = `700 ${fontSize}px Kalam, system-ui, -apple-system, 'Segoe UI', sans-serif`
+  ctx.textBaseline = 'middle'
+  const padX = fontSize * 0.5
+  const width = ctx.measureText(label).width + padX * 2
+  const height = fontSize * 1.5
+  // Up and to the right of the crosshair; to the left near the right edge.
+  const gap = 14
+  const canvasWidth = view.cx * 2
+  const left = px + gap + width > canvasWidth - 4 ? px - gap - width : px + gap
+  const top = Math.max(4, py - gap - height)
+  ctx.beginPath()
+  ctx.roundRect(left, top, width, height, height / 2)
+  ctx.fillStyle = COLORS.popupBg
+  ctx.fill()
+  ctx.fillStyle = hit.multiplier === 0 ? COLORS.popupMiss : COLORS.popupScore
+  ctx.fillText(label, left + padX, top + height / 2)
   ctx.restore()
 }
 

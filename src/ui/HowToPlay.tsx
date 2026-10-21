@@ -38,8 +38,9 @@ export function HowToPlay({ open, onClose }: Props) {
             exactly <strong>0</strong>.
           </li>
           <li>
-            <strong>Tap</strong> (or press <kbd>Space</kbd>) to stop the line sweeping left and
-            right, then tap again for up and down. Your dart lands near where they cross.
+            <strong>Tap anywhere</strong> (or press <kbd>Space</kbd>) to stop the line sweeping left
+            and right, then tap again for up and down. The bed you're aiming at lights up. Your dart
+            lands near where the lines cross.
           </li>
           <li>
             <strong>Finish on a double</strong> (the outer ring) or the bullseye. Going below 0,

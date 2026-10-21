@@ -110,6 +110,17 @@ the resulting state to `src/render`.
   and draws. It must never compute a landing or score itself, and the
   renderer draws aim lines with the same `sweepPosition`, so the line on
   screen is the line that locks.
+- **What you see is what locks.** A tap locks the throw time of the frame that was on
+  screen at the event's own `timeStamp` (`shownAt` in `src/ui/frameLog.ts`, tested): the
+  newest frame drawn at least one frame interval before the tap. Using the time the
+  handler runs instead locks the line 2-3 frames late, which at full sweep speed is more
+  than a treble ring's width. Bots that drive the real UI by timing taps lock about one
+  frame earlier than the moment they tap.
+- Taps count anywhere on the page except buttons, links, inputs and dialogs, so a thumb
+  needn't cover the board. While the Y line sweeps, the renderer lights up the bed under
+  the crosshair and names it (`traceBed` in `src/render/board.ts`, `scoreHit` of the
+  **aim** point, a preview only; the dart still scatters by the wobble). Locking plays a
+  click and a tiny vibration (`playSound('lock')`, `haptic`), both off when muted.
 
 ## Round rules
 

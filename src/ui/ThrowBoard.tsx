@@ -10,8 +10,10 @@ import {
 } from '../game/throw'
 import { fitBoard } from '../render/board'
 import { canvasDpr, setupCanvas, type CanvasSurface } from '../render/canvas'
+import { haptic, playSound } from '../lib/sound'
 import { DART_FLIGHT_MS, SCENE_SETTLE_MS, drawThrowScene, type ThrowScene } from '../render/throw'
 import { BoardCanvas } from './BoardCanvas'
+import { FrameLog, shownAt } from './frameLog'
 
 type Phase = 'aimX' | 'aimY' | 'landed'
 
@@ -42,6 +44,9 @@ const DARTS_SHOWN = 3
  */
 const MIN_TAP_GAP_MS = 120
 
+/** Taps on these are theirs (buttons, links...), not throws. */
+const NOT_A_THROW = 'button, a, input, select, textarea, label, dialog'
+
 /** The overlay is redrawn every frame; 2x is sharp enough and much cheaper than 3x. */
 const OVERLAY_MAX_DPR = 2
 
@@ -59,6 +64,11 @@ const SHAKE: Keyframe[] = [
  * since the throw started, hands them to `resolveThrow` (pure, in src/game)
  * and draws the result. Nothing here decides where a dart lands or what the
  * rules make of it: that's the caller's job, via `onThrow`.
+ *
+ * A tap locks the line where it was on screen at the moment of the tap (see
+ * frameLog.ts), not where it has moved on to by the time the tap is handled.
+ * Taps count anywhere on the page except on buttons and links, so a thumb
+ * needn't cover the board.
  *
  * Two stacked canvases: the static board underneath, and an overlay redrawn
  * every frame with the aim lines and darts.
@@ -103,10 +113,13 @@ export function ThrowBoard({
     // something changes, so an idle board costs (almost) nothing.
     let settledFrameDrawn = false
     let lastTapAt = -Infinity
+    // The aim frames drawn in the current phase, to tell what was on screen at a tap.
+    const frameLog = new FrameLog()
 
     const setLoopPhase = (next: Phase) => {
       phase = next
       settledFrameDrawn = false
+      frameLog.clear()
       setPhase(next)
     }
 
@@ -116,28 +129,39 @@ export function ThrowBoard({
       setLoopPhase('aimX')
     }
 
-    const tap = () => {
+    /** `eventTime`: the input event's timeStamp, on performance.now()'s clock. */
+    const tap = (eventTime: number) => {
       if (!propsRef.current.enabled) return
       const now = performance.now()
-      if (now - lastTapAt < MIN_TAP_GAP_MS) return // a double tap, not two taps
-      // Whole milliseconds: the exact numbers the server will replay.
-      const elapsed = Math.round(now - start)
+      // When the finger touched (or the key went down). Very old browsers
+      // stamped events with the wall clock instead; fall back to now for those.
+      const at = Math.abs(now - eventTime) < 1000 ? Math.min(eventTime, now) : now
+      if (at - lastTapAt < MIN_TAP_GAP_MS) return // a double tap, not two taps
+      // The throw time on screen when the player tapped, in whole milliseconds:
+      // the exact numbers the server will replay.
+      const elapsed = Math.round(shownAt(frameLog.all, at) ?? at - start)
+      const lockFeedback = () => {
+        playSound('lock')
+        haptic(8)
+      }
       if (phase === 'aimX') {
-        lastTapAt = now
+        lastTapAt = at
         if (elapsed > MAX_THROW_MS) return startThrow(now) // left idle too long
         lockX = elapsed
+        lockFeedback()
         setLoopPhase('aimY')
       } else if (phase === 'aimY') {
-        lastTapAt = now
+        lastTapAt = at
         if (elapsed > MAX_THROW_MS) return startThrow(now)
-        const result = resolveThrow(puzzle, { lockX, lockY: elapsed })
+        lockFeedback()
+        const result = resolveThrow(puzzle, { lockX, lockY: Math.max(lockX, elapsed) })
         darts.push({ result, resolvedAt: now })
         if (darts.length > DARTS_SHOWN) darts.shift()
         setLoopPhase('landed')
         setLastInput(result.input)
         propsRef.current.onThrow(result)
       } else if (now - darts[darts.length - 1].resolvedAt >= DART_FLIGHT_MS) {
-        lastTapAt = now
+        lastTapAt = at
         startThrow(now) // ignore taps while the dart is still in the air
       }
     }
@@ -145,8 +169,9 @@ export function ThrowBoard({
     const onPointerDown = (e: PointerEvent) => {
       // One finger at a time: a second finger touching down isn't another tap.
       if (e.button !== 0 || !e.isPrimary) return
+      if (e.target instanceof Element && e.target.closest(NOT_A_THROW)) return
       e.preventDefault()
-      tap()
+      tap(e.timeStamp)
     }
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.code !== 'Space') return
@@ -155,9 +180,9 @@ export function ThrowBoard({
         return
       }
       e.preventDefault() // no page scroll
-      if (!e.repeat) tap()
+      if (!e.repeat) tap(e.timeStamp)
     }
-    stack.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('pointerdown', onPointerDown)
     window.addEventListener('keydown', onKeyDown)
 
     let surface: CanvasSurface | null = null
@@ -189,6 +214,7 @@ export function ThrowBoard({
       const { ctx, width, height } = surface
       ctx.clearRect(0, 0, width, height)
       let aim: ThrowScene['aim'] = null
+      if (phase === 'aimX' || phase === 'aimY') frameLog.record({ drawnAt: now, shownMs: elapsed })
       if (phase === 'aimX' && propsRef.current.enabled) {
         aim = {
           x: sweepPosition(elapsed, puzzle.sweepSpeed),
@@ -228,7 +254,7 @@ export function ThrowBoard({
 
     return () => {
       cancelAnimationFrame(frame)
-      stack.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('pointerdown', onPointerDown)
       window.removeEventListener('keydown', onKeyDown)
     }
   }, [puzzle, startingDarts])
@@ -244,10 +270,10 @@ export function ThrowBoard({
   const prompt = !enabled
     ? ''
     : phase === 'aimX'
-      ? 'Tap or press Space to lock left–right'
+      ? 'Tap anywhere or press Space to lock left–right'
       : phase === 'aimY'
-        ? 'Tap or press Space to lock up–down'
-        : 'Tap or press Space for the next dart'
+        ? 'Tap anywhere or press Space to lock up–down'
+        : 'Tap anywhere or press Space for the next dart'
   return (
     <>
       <div className="board-frame">

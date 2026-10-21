@@ -8,7 +8,7 @@
 
 import { loadJson, saveJson } from './storage'
 
-export type SoundName = 'hit' | 'miss' | 'bust' | 'checkout'
+export type SoundName = 'lock' | 'hit' | 'miss' | 'bust' | 'checkout'
 
 let ctx: AudioContext | null = null
 let master: GainNode | null = null
@@ -59,6 +59,12 @@ export function installAudioUnlock(): () => void {
   }
   events.forEach((e) => window.addEventListener(e, handler, { passive: true }))
   return () => events.forEach((e) => window.removeEventListener(e, handler))
+}
+
+/** A tiny vibration on phones that support it (Android), unless sound is off. */
+export function haptic(ms: number): void {
+  if (muted || typeof navigator === 'undefined' || !navigator.vibrate) return
+  navigator.vibrate(ms)
 }
 
 /** Plays a sound `delayMs` from now (scheduled on the audio clock, so it's sample-accurate). */
@@ -114,6 +120,10 @@ function thud(ctx: AudioContext, out: AudioNode, at: number, brightness: number,
 }
 
 const SOUNDS: Record<SoundName, Voice> = {
+  // A short, dry click: a line locking into place.
+  lock: (ctx, out, at) => {
+    tone(ctx, out, at, { type: 'square', from: 1700, to: 900, duration: 0.025, volume: 0.07 })
+  },
   hit: (ctx, out, at) => {
     thud(ctx, out, at, 1800, 0.9)
     tone(ctx, out, at, { type: 'sine', from: 160, to: 70, duration: 0.09, volume: 0.6 })

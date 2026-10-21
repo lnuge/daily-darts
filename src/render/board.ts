@@ -74,6 +74,41 @@ function wireAngle(k: number): number {
   return Math.atan2(y, x)
 }
 
+/**
+ * Traces, in board units around (0, 0), the outline of the bed `hit` scored
+ * at distance `r` from the centre: one ring of one segment, the outer bull or
+ * the bullseye. (`r` tells the inner single from the outer one.) Returns
+ * false for a miss, which has no bed.
+ */
+export function traceBed(ctx: CanvasRenderingContext2D, hit: Hit, r: number): boolean {
+  if (hit.multiplier === 0) return false
+  ctx.beginPath()
+  if (hit.segment === 25) {
+    if (hit.multiplier === 2) {
+      ctx.arc(0, 0, RADIUS.bullseye, 0, Math.PI * 2)
+    } else {
+      ctx.arc(0, 0, RADIUS.outerBull, 0, Math.PI * 2)
+      ctx.arc(0, 0, RADIUS.bullseye, Math.PI * 2, 0, true)
+    }
+    return true
+  }
+  const [inner, outer] =
+    hit.multiplier === 3
+      ? [RADIUS.tripleInner, RADIUS.tripleOuter]
+      : hit.multiplier === 2
+        ? [RADIUS.doubleInner, RADIUS.doubleOuter]
+        : r < RADIUS.tripleInner
+          ? [RADIUS.outerBull, RADIUS.tripleInner]
+          : [RADIUS.tripleOuter, RADIUS.doubleInner]
+  const k = (SEGMENT_ORDER as readonly number[]).indexOf(hit.segment)
+  const start = wireAngle(k)
+  const end = wireAngle(k + 1)
+  ctx.arc(0, 0, outer, start, end)
+  ctx.arc(0, 0, inner, end, start, true)
+  ctx.closePath()
+  return true
+}
+
 function fillCircle(ctx: CanvasRenderingContext2D, r: number, color: string): void {
   ctx.beginPath()
   ctx.arc(0, 0, r, 0, Math.PI * 2)
