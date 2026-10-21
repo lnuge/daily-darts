@@ -202,6 +202,12 @@ XXXXXX` names have a space, so they never clash with usernames and needn't be un
   Client: `src/lib/username.ts` (pure rules, kept in step with the SQL by `rls.test.ts`),
   `src/lib/profile.ts` (`setUsername`, `onProfileChange` so `useAuth` reloads the name),
   `UsernameEditor` on the profile screen, and a nudge on results while the name is generated.
+- Swear-word filter (`20261025090000_username_filter.sql`): words in `username_blocklist`
+  (`anywhere` true = inside any name, false = whole word only), checked by the internal
+  `username_is_blocked(name)` inside `set_username`, which answers `username_reserved`.
+  Handles capitals, camelCase/underscore/digit word breaks, extra repeated letters and
+  digits for letters. The list is server-only, not in the client. Add words to
+  `username-filter.test.ts` with both blocked names and innocent look-alikes.
 - Auth (`src/lib/auth.ts`): a guest (anonymous) session starts lazily when a ranked round
   finishes; "Sign in with Google" links Google to the guest (`linkIdentity`) so the user
   id and rounds carry over. `ensureSession` dedupes concurrent calls; keep it that way.

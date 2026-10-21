@@ -152,6 +152,34 @@ From `supabase/migrations/20261020120000_profiles_and_rounds.sql`, checked by
   automatically. Players can choose a username (3-20 letters, numbers or `_`, unique
   ignoring case, no names like `admin` or `DailyDarts`) through `set_username`, and can't
   change anything else about their profile (`20261024090000_usernames.sql`).
-- To rename someone with an offensive username: **Table Editor → profiles**, find the row
-  and set `display_name` back to `Player` plus the first 6 characters of their `id` in
-  capitals (e.g. `Player 3F9A1C`), or to another allowed name.
+- Usernames go through a swear-word filter (`20261025090000_username_filter.sql`). The
+  words are in the table `username_blocklist`; see **Managing usernames** below.
+
+## Managing usernames
+
+**Block another word:** **Table Editor → username_blocklist → Insert row**. `word` is
+lower-case letters only. Set `anywhere` to:
+
+- `true` to block it inside any name (`xBADWORDx`). Use it for words that never appear
+  inside ordinary words.
+- `false` to block it only as a whole word: the whole name, or a part between
+  underscores, digits or capitals (`bad_word`, `BigBad`, `bad99`). Use it for short
+  words that hide inside normal ones (`ass` is in `class`).
+
+It takes effect immediately. It stops new names; it doesn't rename anyone.
+
+**Find existing usernames that are now blocked** (SQL Editor):
+
+```sql
+select id, display_name from public.profiles
+where display_name !~ ' ' and public.username_is_blocked(display_name);
+```
+
+**Rename someone:** **Table Editor → profiles**, find the row and set `display_name` back
+to `Player` plus the first 6 characters of their `id` in capitals (e.g. `Player 3F9A1C`),
+or to another allowed name.
+
+**Unblock an innocent name:** no filter is perfect (`Scunthorpe` contains a swear word).
+Either delete or loosen the word in `username_blocklist` (switch `anywhere` to `false`), or
+set the player's name for them in **profiles**: the filter only runs when players choose
+a name themselves.
