@@ -5,6 +5,7 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { usernameProblem } from '../../src/lib/username.ts'
 import { createTestDb, type TestDb, type Who } from './db.ts'
 
 let t: TestDb
@@ -65,23 +66,13 @@ describe('profiles', () => {
     expect(rows[0]).toEqual({ n: 3 })
   })
 
-  it('let a player change their own display name', async () => {
-    const { affectedRows } = await as(
-      { role: 'authenticated', id: alice },
-      `update public.profiles set display_name = 'Alice' where id = '${alice}'`,
-    )
-    expect(affectedRows).toBe(1)
-  })
-
-  it("don't let a player change someone else's name", async () => {
-    const { affectedRows } = await as(
-      { role: 'authenticated', id: alice },
-      `update public.profiles set display_name = 'Hacked' where id = '${bob}'`,
-    )
-    expect(affectedRows).toBe(0)
-  })
-
-  it('only let players change the display name column', async () => {
+  it("can't be updated directly by players (only through set_username)", async () => {
+    await expect(
+      as(
+        { role: 'authenticated', id: alice },
+        `update public.profiles set display_name = 'Alice' where id = '${alice}'`,
+      ),
+    ).rejects.toThrow(/permission denied/)
     await expect(
       as(
         { role: 'authenticated', id: alice },
@@ -90,11 +81,11 @@ describe('profiles', () => {
     ).rejects.toThrow(/permission denied/)
   })
 
-  it('reject blank, padded or very long names', async () => {
-    for (const name of ['', '  Alice', 'x'.repeat(25)]) {
+  it('reject blank, padded, very long or badly formed names, even from the server', async () => {
+    for (const name of ['', '  Alice', 'x'.repeat(25), 'two words', 'Bob!', 'Player 3f9a1c']) {
       await expect(
         as(
-          { role: 'authenticated', id: alice },
+          { role: 'service_role' },
           `update public.profiles set display_name = $1 where id = '${alice}'`,
           [name],
         ),
@@ -102,10 +93,122 @@ describe('profiles', () => {
     }
   })
 
+  it("don't require generated names to be unique", async () => {
+    const { affectedRows } = await as(
+      { role: 'service_role' },
+      `update public.profiles set display_name = 'Player 000000' where id in ('${alice}', '${bob}')`,
+    )
+    expect(affectedRows).toBe(2)
+  })
+
   it("can't be edited by signed-out visitors", async () => {
     await expect(
       as({ role: 'anon' }, `update public.profiles set display_name = 'x' where id = '${bob}'`),
     ).rejects.toThrow(/permission denied/)
+  })
+})
+
+describe('set_username', () => {
+  const setName = (id: string, name: unknown) =>
+    as<{ name: string }>({ role: 'authenticated', id }, 'select public.set_username($1) as name', [
+      name,
+    ])
+  const nameOf = async (id: string) =>
+    (
+      await t.db.query<{ display_name: string }>(
+        'select display_name from public.profiles where id = $1',
+        [id],
+      )
+    ).rows[0].display_name
+
+  it("sets the caller's own name, trimmed, and returns it", async () => {
+    const { rows } = await asCommit(
+      { role: 'authenticated', id: alice },
+      'select public.set_username($1) as name',
+      ['  Alice_99 '],
+    )
+    expect(rows[0]).toEqual({ name: 'Alice_99' })
+    expect(await nameOf(alice)).toBe('Alice_99')
+    expect(await nameOf(bob)).toMatch(/^Player [0-9A-F]{6}$/)
+  })
+
+  it('lets guests choose a username too', async () => {
+    const { rows } = await setName(guest, 'GuestStar')
+    expect(rows[0]).toEqual({ name: 'GuestStar' })
+  })
+
+  it('is unique ignoring case', async () => {
+    for (const name of ['Alice_99', 'alice_99', 'ALICE_99']) {
+      await expect(setName(bob, name)).rejects.toThrow(/username_taken/)
+    }
+    // The owner can change the case of their own name.
+    const { rows } = await setName(alice, 'ALICE_99')
+    expect(rows[0]).toEqual({ name: 'ALICE_99' })
+  })
+
+  it('rejects names that are too short, too long or have other characters', async () => {
+    for (const name of [
+      '',
+      'ab',
+      'x'.repeat(21),
+      'two words',
+      'bob!',
+      'bob-smith',
+      'Álvaro',
+      'b0b\u0430',
+      '😀😀😀',
+      null,
+    ]) {
+      await expect(setName(bob, name)).rejects.toThrow(/username_invalid/)
+    }
+  })
+
+  it('accepts names at the length limits', async () => {
+    expect((await setName(bob, 'abc')).rows[0]).toEqual({ name: 'abc' })
+    expect((await setName(bob, 'x'.repeat(20))).rows[0]).toEqual({ name: 'x'.repeat(20) })
+  })
+
+  it("agrees with the app's own check on what's a valid username", async () => {
+    for (const name of ['ab', 'abc', 'x'.repeat(20), 'x'.repeat(21), ' Pad_1 ', 'a b c', 'a.b.c']) {
+      const appOk = usernameProblem(name) === null
+      const serverOk = await setName(bob, name).then(
+        () => true,
+        (e: Error) => !/username_invalid/.test(e.message),
+      )
+      expect(serverOk, name).toBe(appOk)
+    }
+  })
+
+  it('rejects names that pass for the game, staff or a generated name', async () => {
+    for (const name of [
+      'admin',
+      'Moderator',
+      'DailyDarts',
+      'the_dailydarts_team',
+      'Daily_Darts_HQ',
+      'Player',
+      'Player_3F9A1C',
+      'player3f9a1c',
+    ]) {
+      await expect(setName(bob, name)).rejects.toThrow(/username_reserved/)
+    }
+    // Only the exact generated pattern is reserved, not every name starting "player".
+    expect((await setName(bob, 'PlayerOne')).rows[0]).toEqual({ name: 'PlayerOne' })
+  })
+
+  it("can't be called by signed-out visitors", async () => {
+    await expect(as({ role: 'anon' }, "select public.set_username('Sneaky')")).rejects.toThrow(
+      /permission denied/,
+    )
+  })
+
+  it('shows the new name on the leaderboard', async () => {
+    await asCommit({ role: 'authenticated', id: bob }, "select public.set_username('Bobby')")
+    const { rows } = await as<{ board: { top: { display_name: string }[] } }>(
+      { role: 'anon' },
+      `select public.get_leaderboard('2026-11-01') as board`,
+    )
+    expect(rows[0].board.top.map((e) => e.display_name)).toEqual(['Bobby'])
   })
 })
 

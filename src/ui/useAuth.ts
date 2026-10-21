@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { onProfileChange } from '../lib/profile'
 
 export type AuthState =
   /** Supabase isn't configured: the game runs offline. */
@@ -28,6 +29,10 @@ export function useAuth(): AuthState {
     return () => data.subscription.unsubscribe()
   }, [])
 
+  // Bumped when the player renames themselves, to load the new name.
+  const [profileVersion, setProfileVersion] = useState(0)
+  useEffect(() => onProfileChange(() => setProfileVersion((v) => v + 1)), [])
+
   const userId = session?.userId
   useEffect(() => {
     if (!supabase || !userId) return
@@ -43,7 +48,7 @@ export function useAuth(): AuthState {
     return () => {
       cancelled = true
     }
-  }, [userId])
+  }, [userId, profileVersion])
 
   if (!supabase) return { status: 'disabled' }
   if (!loaded) return { status: 'loading' }

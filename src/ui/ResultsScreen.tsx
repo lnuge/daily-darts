@@ -3,8 +3,10 @@ import type { DailyPuzzle } from '../game/puzzle'
 import type { Rating, RoundSummary } from '../game/summary'
 import { formatCountdown, puzzleEndsAt, todayKey } from '../lib/daily'
 import { buildShareText, copyText } from '../lib/share'
+import { isGeneratedName } from '../lib/username'
 import { AccountBar } from './AccountBar'
 import { StatsPanel } from './PlayerStats'
+import { useAuth } from './useAuth'
 import { usePlayerStats } from './usePlayerStats'
 import type { SubmissionStatus } from './useRoundSubmission'
 import type { GameMode, Navigate } from './App'
@@ -103,6 +105,12 @@ export function ResultsScreen({ mode, puzzle, summary, submission, onNavigate }:
   const verified =
     ranked && (submission?.status.kind === 'verified' || submission?.status.kind === 'already')
   const stats = usePlayerStats(verified, todayKey(), submission?.status.kind)
+  const auth = useAuth()
+  // Nudge players still on a generated name to pick one for the leaderboard.
+  const unnamed =
+    verified && auth.status === 'signed-in' && auth.displayName && isGeneratedName(auth.displayName)
+      ? auth.displayName
+      : null
   const shareText = buildShareText(puzzle.puzzleNumber, summary, siteUrl())
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
 
@@ -160,6 +168,14 @@ export function ResultsScreen({ mode, puzzle, summary, submission, onNavigate }:
 
       {ranked && submission && <SubmissionLine {...submission} />}
       {verified && <StatsPanel load={stats} />}
+      {unnamed && (
+        <p className="muted">
+          You're on the leaderboard as {unnamed}.{' '}
+          <button className="link" onClick={() => onNavigate({ name: 'profile' })}>
+            Choose a username
+          </button>
+        </p>
+      )}
 
       {ranked ? (
         <>

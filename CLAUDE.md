@@ -195,6 +195,13 @@ Before considering a change done: `npm run typecheck`, `npm run lint`,
 - Security model: anyone reads profiles and verified rounds; players insert only their
   own rounds and only the data columns (never `verified`, `id`, `created_at`); only the
   service role updates or deletes rounds or sets `verified`.
+- Usernames (`supabase/migrations/20261024090000_usernames.sql`): players rename only via
+  the `set_username(p_username)` RPC (3-20 `[A-Za-z0-9_]`, unique ignoring case, reserved
+  names refused; errors `username_taken`/`_invalid`/`_reserved`). Generated `Player
+XXXXXX` names have a space, so they never clash with usernames and needn't be unique.
+  Client: `src/lib/username.ts` (pure rules, kept in step with the SQL by `rls.test.ts`),
+  `src/lib/profile.ts` (`setUsername`, `onProfileChange` so `useAuth` reloads the name),
+  `UsernameEditor` on the profile screen, and a nudge on results while the name is generated.
 - Auth (`src/lib/auth.ts`): a guest (anonymous) session starts lazily when a ranked round
   finishes; "Sign in with Google" links Google to the guest (`linkIdentity`) so the user
   id and rounds carry over. `ensureSession` dedupes concurrent calls; keep it that way.

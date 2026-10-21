@@ -148,5 +148,10 @@ From `supabase/migrations/20261020120000_profiles_and_rounds.sql`, checked by
   set `verified`, `id` or `created_at`, so they can't self-verify or backdate a round.
 - Players can read their own rounds; nobody but the server can update or delete rounds.
 - One round per player per day (`unique (user_id, puzzle_date)`).
-- Players can change their display name and nothing else. New players are named
-  `Player XXXXXX`; real names from Google are never used automatically.
+- New players are named `Player XXXXXX`; real names from Google are never used
+  automatically. Players can choose a username (3-20 letters, numbers or `_`, unique
+  ignoring case, no names like `admin` or `DailyDarts`) through `set_username`, and can't
+  change anything else about their profile (`20261024090000_usernames.sql`).
+- To rename someone with an offensive username: **Table Editor → profiles**, find the row
+  and set `display_name` back to `Player` plus the first 6 characters of their `id` in
+  capitals (e.g. `Player 3F9A1C`), or to another allowed name.

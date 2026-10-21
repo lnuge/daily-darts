@@ -5,6 +5,7 @@ import type { Navigate } from './App'
 import { StatsPanel } from './PlayerStats'
 import { usePlayerStats } from './usePlayerStats'
 import { useAuth } from './useAuth'
+import { UsernameEditor } from './UsernameEditor'
 
 type Props = {
   today: string
@@ -26,6 +27,8 @@ export function ProfileScreen({ today, onNavigate }: Props) {
           <p className="muted">{auth.isGuest ? 'Guest player' : 'Signed in with Google'}</p>
         )}
       </header>
+
+      {signedIn && <UsernameEditor name={auth.displayName} />}
 
       {!supabase ? (
         <p className="muted">
