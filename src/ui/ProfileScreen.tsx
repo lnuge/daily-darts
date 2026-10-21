@@ -21,6 +21,11 @@ export function ProfileScreen({ today, onNavigate }: Props) {
 
   return (
     <section className="screen profile">
+      <div className="topbar">
+        <button className="link back" onClick={() => onNavigate({ name: 'menu' })}>
+          ‹ Menu
+        </button>
+      </div>
       <header className="title">
         <h2>{signedIn ? (auth.displayName ?? 'Profile') : 'Profile'}</h2>
         {signedIn && (
@@ -44,11 +49,6 @@ export function ProfileScreen({ today, onNavigate }: Props) {
 
       <AccountBar />
 
-      <div className="actions">
-        <button className="secondary" onClick={() => onNavigate({ name: 'menu' })}>
-          Menu
-        </button>
-      </div>
       <LegalLinks onNavigate={onNavigate} />
     </section>
   )

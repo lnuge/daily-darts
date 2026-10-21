@@ -28,9 +28,9 @@ const COLORS = {
   outline: '#0b0b0b',
   shaft: '#f7f7f7',
   impact: '#ffffff',
-  popupBg: 'rgba(12, 16, 14, 0.88)',
+  popupBg: 'rgba(24, 30, 28, 0.9)',
   popupText: '#ffffff',
-  popupScore: '#ffd23f',
+  popupScore: '#f6d86b',
   popupMiss: '#ff8a80',
 } as const
 
@@ -217,7 +217,7 @@ function drawScorePopup(ctx: CanvasRenderingContext2D, view: BoardView, dart: La
   ctx.save()
   ctx.globalAlpha = clamp01(since / POPUP_FADE_MS)
   ctx.textBaseline = 'middle'
-  ctx.font = `800 ${fontSize}px system-ui, -apple-system, 'Segoe UI', sans-serif`
+  ctx.font = `700 ${fontSize}px Kalam, system-ui, -apple-system, 'Segoe UI', sans-serif`
   const gap = score ? fontSize * 0.4 : 0
   const labelWidth = ctx.measureText(label).width
   const scoreWidth = score ? ctx.measureText(score).width : 0

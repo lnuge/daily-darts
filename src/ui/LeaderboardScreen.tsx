@@ -71,6 +71,11 @@ export function LeaderboardScreen({ today, date: initialDate, onNavigate }: Prop
 
   return (
     <section className="screen leaderboard">
+      <div className="topbar">
+        <button className="link back" onClick={() => onNavigate({ name: 'menu' })}>
+          ‹ Menu
+        </button>
+      </div>
       <header className="title">
         <h2>Leaderboard</h2>
         <p className="muted">{date === today ? "Today's puzzle" : `Puzzle for ${date}`}</p>
@@ -122,16 +127,11 @@ export function LeaderboardScreen({ today, date: initialDate, onNavigate }: Prop
         <Board data={state.data} />
       )}
 
-      <div className="actions">
-        {supabase && (
-          <button className="secondary" onClick={() => setReloads((n) => n + 1)}>
-            Refresh
-          </button>
-        )}
-        <button className="secondary" onClick={() => onNavigate({ name: 'menu' })}>
-          Menu
+      {supabase && (
+        <button className="link" onClick={() => setReloads((n) => n + 1)}>
+          Refresh
         </button>
-      </div>
+      )}
     </section>
   )
 }

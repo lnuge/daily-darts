@@ -266,6 +266,23 @@ XXXXXX` names have a space, so they never clash with usernames and needn't be un
   table is built in SQL by the migration and tested against `findCheckout` for every
   score; if the checkout rules ever change, change both.
 
+## Look: pub chalkboard
+
+- `src/ui/styles.css`: a slate chalkboard (inline SVG grain + smudge gradients) in a wooden
+  frame on big screens; the dartboard hangs in a round wooden surround (`.board-frame`,
+  sized per screen with `--board-size` so nothing scrolls). Colours are chalk tokens on
+  `:root` (`--chalk`, `--chalk-dim`, `--chalk-yellow`, ...). Buttons: chalk-filled
+  (default/`.primary`), chalk outline (`.secondary`), underlined (`.link`); every screen
+  has "‹ Menu" in a `.topbar` instead of a Menu button at the bottom.
+- Fonts are self-hosted via `@fontsource` (imported in `main.tsx`; no Google Fonts
+  requests, so the privacy policy needn't change): Cabin Sketch for headings and big
+  numbers, Kalam for everything else, system sans for the legal pages' long text.
+- The HUD is a pub scoreboard: `chalkedScores(steps, round)` (`src/ui/scoreboard.ts`,
+  tested) gives the scores chalked up for the target in play; earlier ones are crossed
+  off, the live score is big.
+- `public/og-image.png` and `public/apple-touch-icon.png` use this look; regenerate them
+  if it changes.
+
 ## Game feel and performance
 
 - Sound (`src/lib/sound.ts`): synthesised with Web Audio, no files. The AudioContext is
@@ -284,9 +301,9 @@ XXXXXX` names have a space, so they never clash with usernames and needn't be un
   `touch-action` stops double-tap zoom and swipes on the board; no page scroll in game.
 - Performance: the static board is drawn once; only the overlay redraws per frame, at
   most 2x DPR, and it stops drawing once the scene has settled (`SCENE_SETTLE_MS`).
-  Measured on a 390x844 @3x viewport with 4x CPU throttling: steady 60 fps, worst frame
-  16.8 ms, main thread ~41% busy while playing and ~1% when idle. Re-measure if you add
-  per-frame work.
+  Measured on a 390x844 @3x viewport with 4x CPU throttling (after the chalkboard
+  restyle): steady 60 fps, p95 frame 16.8 ms with the odd 33-50 ms frame, main thread
+  ~37% busy while playing. Re-measure if you add per-frame work.
 
 ## URLs and deployment
 
@@ -304,7 +321,7 @@ XXXXXX` names have a space, so they never clash with usernames and needn't be un
   variables. `VITE_SITE_URL` also fills `%SITE_URL%` in `index.html` (Open Graph tags)
   via the `siteUrl` plugin in `vite.config.ts`.
 - `public/og-image.png` (1200x630) and `public/apple-touch-icon.png` were rendered with
-  the game's own `drawBoard`; regenerate them if the board's look changes.
+  the game's own `drawBoard` and stylesheet; regenerate them if the look changes.
 
 ## Privacy policy and terms
 

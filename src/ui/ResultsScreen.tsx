@@ -45,7 +45,10 @@ function NextPuzzle({ date, onNavigate }: { date: string; onNavigate: Navigate }
     return (
       <div className="next-puzzle">
         <p>A new puzzle is ready!</p>
-        <button onClick={() => onNavigate({ name: 'game', mode: 'ranked', date: todayKey() })}>
+        <button
+          className="primary"
+          onClick={() => onNavigate({ name: 'game', mode: 'ranked', date: todayKey() })}
+        >
           Play today's puzzle
         </button>
       </div>
@@ -120,8 +123,13 @@ export function ResultsScreen({ mode, puzzle, summary, submission, onNavigate }:
 
   return (
     <section className="screen results">
+      <div className="topbar">
+        <button className="link back" onClick={() => onNavigate({ name: 'menu' })}>
+          ‹ Menu
+        </button>
+      </div>
       <header className="title">
-        <h2>{ranked ? 'Round complete' : 'Practice complete'}</h2>
+        <h2>{ranked ? 'Game shot!' : 'Practice complete'}</h2>
         {ranked ? (
           <p className="muted">Daily Darts #{puzzle.puzzleNumber}</p>
         ) : (
@@ -131,7 +139,7 @@ export function ResultsScreen({ mode, puzzle, summary, submission, onNavigate }:
 
       <div className="total">
         <span className="total-value">{summary.totalDarts}</span>
-        <span className="muted">total darts</span>
+        <span className="muted">darts</span>
       </div>
 
       <table className="per-target">
@@ -162,7 +170,7 @@ export function ResultsScreen({ mode, puzzle, summary, submission, onNavigate }:
         </tbody>
       </table>
 
-      <p>
+      <p className="best-visit">
         Best visit <strong>{summary.bestVisit}</strong>
       </p>
 
@@ -183,18 +191,14 @@ export function ResultsScreen({ mode, puzzle, summary, submission, onNavigate }:
             {shareText}
           </pre>
           <div className="actions">
-            <button onClick={share}>{copyState === 'copied' ? 'Copied!' : 'Share'}</button>
+            <button className="primary" onClick={share}>
+              {copyState === 'copied' ? 'Copied!' : 'Share'}
+            </button>
             <button
               className="secondary"
               onClick={() => onNavigate({ name: 'leaderboard', date: puzzle.date })}
             >
               Leaderboard
-            </button>
-            <button className="secondary" onClick={() => onNavigate({ name: 'practice' })}>
-              Practice
-            </button>
-            <button className="secondary" onClick={() => onNavigate({ name: 'menu' })}>
-              Menu
             </button>
           </div>
           <p className="muted" aria-live="polite">
@@ -205,13 +209,15 @@ export function ResultsScreen({ mode, puzzle, summary, submission, onNavigate }:
                 : ''}
           </p>
           <NextPuzzle date={puzzle.date} onNavigate={onNavigate} />
+          <button className="link" onClick={() => onNavigate({ name: 'practice' })}>
+            Play a past day
+          </button>
           <AccountBar />
         </>
       ) : (
         <div className="actions">
-          <button onClick={() => onNavigate({ name: 'practice' })}>Practice another day</button>
-          <button className="secondary" onClick={() => onNavigate({ name: 'menu' })}>
-            Menu
+          <button className="primary" onClick={() => onNavigate({ name: 'practice' })}>
+            Practice another day
           </button>
         </div>
       )}

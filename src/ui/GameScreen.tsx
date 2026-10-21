@@ -124,14 +124,15 @@ export function GameScreen({ mode, date, onNavigate }: Props) {
 
   return (
     <section className="screen game">
-      {!ranked && <p className="badge practice">Practice · {date} · Unranked</p>}
       <Hud
         round={round}
         steps={steps}
+        practiceDate={ranked ? undefined : date}
         hintOn={hintOn}
         onToggleHint={toggleHint}
         muted={muted}
         onToggleMute={toggleMute}
+        onMenu={() => onNavigate({ name: 'menu' })}
       />
       <ThrowBoard
         puzzle={puzzle}
@@ -141,11 +142,6 @@ export function GameScreen({ mode, date, onNavigate }: Props) {
         onThrow={onThrow}
         celebrate={celebrate}
       />
-      <div className="actions">
-        <button className="secondary" onClick={() => onNavigate({ name: 'menu' })}>
-          Menu
-        </button>
-      </div>
     </section>
   )
 }

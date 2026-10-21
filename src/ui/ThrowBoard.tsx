@@ -250,20 +250,22 @@ export function ThrowBoard({
         : 'Tap or press Space for the next dart'
   return (
     <>
-      <div
-        ref={stackRef}
-        className="board-stack"
-        // The last throw's input, for debugging and end-to-end tests.
-        data-last-throw={lastInput ? JSON.stringify(lastInput) : undefined}
-      >
-        <BoardCanvas className="layer" />
-        <canvas ref={overlayRef} className="layer" aria-hidden="true" />
-        {celebrate > 0 && (
-          // Keyed so each checkout mounts a fresh element and replays the animation.
-          <div key={celebrate} className="checkout-flash" aria-hidden="true">
-            <span>CHECKOUT!</span>
-          </div>
-        )}
+      <div className="board-frame">
+        <div
+          ref={stackRef}
+          className="board-stack"
+          // The last throw's input, for debugging and end-to-end tests.
+          data-last-throw={lastInput ? JSON.stringify(lastInput) : undefined}
+        >
+          <BoardCanvas className="layer" />
+          <canvas ref={overlayRef} className="layer" aria-hidden="true" />
+          {celebrate > 0 && (
+            // Keyed so each checkout mounts a fresh element and replays the animation.
+            <div key={celebrate} className="checkout-flash" aria-hidden="true">
+              <span>CHECKOUT!</span>
+            </div>
+          )}
+        </div>
       </div>
       <p className="muted throw-prompt">{prompt}</p>
     </>

@@ -1,20 +1,62 @@
+/*
+ * Pub chalkboard. The page is a slate board in a wooden frame; text is chalk
+ * (Kalam for words, Cabin Sketch for headings and big numbers); the dartboard
+ * hangs in a round wooden surround. Textures are inline SVG noise and CSS
+ * gradients: no image files, nothing repainted per frame.
+ */
+
 :root {
-  --bg: #0f1a14;
-  --fg: #f4ecd8;
-  --muted: #a9b5ab;
-  --accent: #d9433b;
-  --accent-fg: #fff;
-  --border: #2c3d32;
+  --slate: #1e2523;
+  --slate-deep: #171d1b;
+  --chalk: #f2efe6;
+  --chalk-dim: rgba(242, 239, 230, 0.66);
+  --chalk-faint: rgba(242, 239, 230, 0.28);
+  --chalk-ghost: rgba(242, 239, 230, 0.1);
+  --chalk-yellow: #f6d86b;
+  --chalk-red: #f08a80;
+  --chalk-green: #9ad98f;
+  --chalk-orange: #f5b26b;
+  --paper: #f4eddb;
+  --ink: #2a2622;
+
+  /* Kept for components that read them. */
+  --fg: var(--chalk);
+  --muted: var(--chalk-dim);
+  --border: var(--chalk-faint);
+  --accent: var(--chalk-yellow);
+
+  /* A hand-drawn box: no two corners alike. */
+  --hand: 255px 15px 225px 15px / 15px 225px 15px 255px;
+  --hand-soft: 18px 6px 16px 7px / 7px 16px 6px 18px;
+
+  /* Fine white grain, like chalk dust ground into slate. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.075 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* Dark grain, for chalk rubbed onto a surface (filled buttons). */
+  --grain-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.12 0 0 0 0 0.14 0 0 0 0 0.13 0 0 0 0.22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* Old eraser smudges. */
+  --smudges:
+    radial-gradient(ellipse 60% 35% at 18% 12%, rgba(255, 255, 255, 0.055), transparent 70%),
+    radial-gradient(ellipse 45% 30% at 85% 40%, rgba(255, 255, 255, 0.04), transparent 70%),
+    radial-gradient(ellipse 55% 30% at 30% 85%, rgba(255, 255, 255, 0.035), transparent 70%);
+  --chalkboard: var(--grain), var(--smudges), var(--slate);
+  --wood:
+    linear-gradient(rgba(255, 214, 160, 0.08), rgba(0, 0, 0, 0.25)),
+    repeating-linear-gradient(
+      91deg,
+      #5a371f 0 7px,
+      #634027 7px 10px,
+      #4f2f1a 10px 17px,
+      #6b462b 17px 21px,
+      #573520 21px 30px
+    );
 
   color-scheme: dark;
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
-  color: var(--fg);
-  background: var(--bg);
+  font-family: Kalam, 'Comic Sans MS', 'Segoe Print', system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.35;
+  color: var(--chalk);
+  background: var(--wood);
+  -webkit-font-smoothing: antialiased;
 }
 
 * {
@@ -26,13 +68,32 @@ body {
   /* No pull-to-refresh or rubber-band bounce stealing a swipe mid-game. */
   overscroll-behavior: none;
   min-height: 100dvh;
+  background: var(--chalkboard);
 }
 
 .app {
   display: grid;
   place-items: center;
   min-height: 100dvh;
-  padding: 16px;
+  padding: 12px 16px 16px;
+}
+
+/* On big screens the board hangs in its wooden frame. */
+@media (min-width: 760px) and (min-height: 600px) {
+  body {
+    padding: 18px;
+    background: var(--wood);
+  }
+
+  .app {
+    min-height: calc(100dvh - 36px);
+    border-radius: 4px;
+    background: var(--chalkboard);
+    box-shadow:
+      inset 0 0 0 2px rgba(0, 0, 0, 0.45),
+      inset 0 0 60px rgba(0, 0, 0, 0.45),
+      0 2px 0 rgba(255, 220, 170, 0.15);
+  }
 }
 
 .screen {
@@ -45,20 +106,140 @@ body {
   text-align: center;
 }
 
-.title {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+/* ---------- Type ---------- */
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: 'Cabin Sketch', Kalam, system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
 }
 
 h1,
 h2 {
-  margin: 0;
+  font-size: clamp(2rem, 8vw, 2.6rem);
+  text-shadow: 0 0 6px rgba(242, 239, 230, 0.18);
+}
+
+.title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .muted {
   margin: 0;
-  color: var(--muted);
+  color: var(--chalk-dim);
+}
+
+strong {
+  font-weight: 700;
+}
+
+a {
+  color: inherit;
+}
+
+/* ---------- Buttons ---------- */
+
+button {
+  min-height: 44px;
+  padding: 7px 24px;
+  touch-action: manipulation; /* no double-tap zoom or tap delay */
+  border: 2px solid var(--chalk);
+  border-radius: var(--hand);
+  /* Chalk rubbed onto the board: solid, with dark grain showing through. */
+  background: var(--grain-dark), var(--chalk);
+  color: var(--slate);
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    background-color 120ms ease;
+}
+
+button:hover:not(:disabled) {
+  transform: rotate(-0.6deg) scale(1.02);
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px dashed var(--chalk-yellow);
+  outline-offset: 3px;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+button.primary.big {
+  min-width: min(100%, 240px);
+  padding: 8px 48px;
+  font-family: 'Cabin Sketch', Kalam, sans-serif;
+  font-size: 1.9rem;
+  letter-spacing: 0.04em;
+}
+
+button.secondary {
+  background: transparent;
+  border-color: var(--chalk-dim);
+  color: var(--chalk);
+}
+
+button.link {
+  padding: 6px 8px;
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: var(--chalk);
+  text-decoration: underline;
+  text-decoration-color: var(--chalk-faint);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+}
+
+button.link:hover:not(:disabled) {
+  transform: none;
+  text-decoration-color: var(--chalk-yellow);
+}
+
+button.link.back {
+  text-decoration: none;
+  color: var(--chalk-dim);
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--chalk);
+}
+
+.icon {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon-button[aria-pressed='false'] {
+  color: var(--chalk-dim);
 }
 
 .actions {
@@ -68,35 +249,76 @@ h2 {
   gap: 12px;
 }
 
-button {
+/* "‹ Menu" on the left, anything else on the right. */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  max-width: 560px;
   min-height: 44px;
-  touch-action: manipulation; /* no double-tap zoom or tap delay */
-  font: inherit;
-  font-weight: 600;
-  padding: 10px 20px;
-  border: 1px solid var(--accent);
-  border-radius: 8px;
-  background: var(--accent);
-  color: var(--accent-fg);
-  cursor: pointer;
+  margin: -6px 0 -8px;
 }
 
-button.secondary {
-  background: transparent;
-  border-color: var(--border);
-  color: var(--fg);
+.topbar .back {
+  margin-left: -8px;
 }
+
+/* ---------- Inputs ---------- */
+
+input {
+  min-height: 44px;
+  padding: 6px 14px;
+  border: 2px solid var(--chalk-faint);
+  border-radius: var(--hand-soft);
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--chalk);
+  /* 16px or more stops iOS zooming in on focus. */
+  font: inherit;
+  font-size: max(1.05rem, 16px);
+}
+
+input[aria-invalid='true'] {
+  border-color: var(--chalk-red);
+}
+
+/* ---------- The dartboard ---------- */
 
 /*
- * Square, as wide as the column allows but never taller than the viewport
- * minus room for the title and buttons, so the whole screen fits without
+ * The board hangs in a round wooden surround. --board-size is the whole
+ * thing, frame included; each screen sets it so the page fits without
  * scrolling on phones (portrait and landscape) and desktops alike.
  */
+.board-frame {
+  --board-size: min(100%, max(220px, 100dvh - 260px), 560px);
+  width: var(--board-size);
+  aspect-ratio: 1;
+  padding: clamp(8px, 3.8%, 20px);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 220, 170, 0.22), transparent 55%),
+    radial-gradient(circle, transparent 58%, rgba(0, 0, 0, 0.45) 100%),
+    repeating-radial-gradient(
+      circle,
+      #5c3921 0 5px,
+      #74492b 5px 8px,
+      #4a2c17 8px 14px,
+      #6a4328 14px 17px
+    );
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.55),
+    0 3px 0 rgba(0, 0, 0, 0.5),
+    inset 0 2px 0 rgba(255, 225, 180, 0.25),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.4);
+}
+
 .board,
 .board-stack {
   display: block;
-  width: min(100%, max(220px, 100dvh - 220px));
+  width: 100%;
   aspect-ratio: 1;
+  border-radius: 50%;
   touch-action: none;
 }
 
@@ -116,79 +338,168 @@ button.secondary {
   height: 100%;
 }
 
-/* Fixed height so the layout doesn't jump as the text changes. */
-.throw-status {
-  min-height: 3em;
+/* ---------- Menu ---------- */
+
+.screen.menu {
+  gap: 10px;
+}
+
+.menu .board-frame {
+  --board-size: min(100%, max(180px, 100dvh - 490px), 400px);
+  margin: 4px 0;
+}
+
+.masthead {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.wordmark {
+  font-size: clamp(2.8rem, 13vw, 4.2rem);
+  line-height: 0.95;
+  transform: rotate(-2deg);
+}
+
+/* A chalk swoosh under the name. */
+.wordmark::after {
+  content: '';
+  display: block;
+  height: 10px;
+  margin: 4px 6% 0 10%;
+  border-bottom: 3px solid var(--chalk-yellow);
+  border-radius: 0 0 50% 60% / 0 0 100% 80%;
+  opacity: 0.85;
+}
+
+.specials {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.specials-label {
+  color: var(--chalk-dim);
+  font-size: 0.95rem;
+}
+
+.specials-targets {
+  display: flex;
+  gap: 18px;
+  font-family: 'Cabin Sketch', Kalam, sans-serif;
+  font-size: 1.9rem;
+  line-height: 1.1;
+  color: var(--chalk-yellow);
+}
+
+.menu-links {
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 2px;
+  gap: 0 2px;
 }
 
-.throw-status p {
-  margin: 0;
-}
-
-.throw-result {
-  font-size: 1.25rem;
-  font-weight: 800;
+.menu-links .link {
+  font-size: 1.05rem;
 }
 
 /* ---------- Game screen ---------- */
 
 .screen.game {
-  gap: 10px;
+  gap: 8px;
 }
 
-/* Leave room for the HUD above the board. */
-.game .board-stack {
-  width: min(100%, max(220px, 100dvh - 330px));
+.game .board-frame {
+  --board-size: min(100%, max(220px, 100dvh - 300px), 600px);
 }
 
-.throw-prompt {
-  min-height: 1.4em;
+/* Inside the wooden frame on big screens: 36px less height to play with. */
+@media (min-width: 760px) and (min-height: 600px) {
+  .game .board-frame {
+    --board-size: min(100%, max(220px, 100dvh - 340px), 600px);
+  }
+
+  .menu .board-frame {
+    --board-size: min(100%, max(180px, 100dvh - 530px), 400px);
+  }
 }
 
 .hud {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
   max-width: 480px;
 }
 
+.hud .topbar {
+  margin: -6px 0 -4px;
+}
+
+/* The targets across the top of the scoreboard. */
 .chips {
   display: flex;
   justify-content: center;
-  gap: 8px;
+  gap: 22px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .chip {
+  position: relative;
   display: flex;
   align-items: baseline;
-  gap: 6px;
-  padding: 4px 12px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
+  gap: 4px;
+  padding: 0 10px;
+  color: var(--chalk-dim);
 }
 
+.chip-target {
+  position: relative;
+  font-family: 'Cabin Sketch', Kalam, sans-serif;
+  font-size: 1.5rem;
+  line-height: 1.3;
+}
+
+/* Ringed in chalk. */
 .chip.current {
-  border-color: var(--accent);
-  color: var(--fg);
-  font-weight: 700;
+  color: var(--chalk);
 }
 
-.chip.done .chip-target {
-  text-decoration: line-through;
+.chip.current::before {
+  content: '';
+  position: absolute;
+  inset: -1px -2px;
+  border: 2px solid var(--chalk-yellow);
+  border-radius: 50% 44% 52% 46% / 56% 48% 52% 44%;
+  transform: rotate(-3deg);
+}
+
+.chip.done {
+  color: var(--chalk-faint);
 }
 
 .chip-darts {
-  font-size: 0.85em;
+  color: var(--chalk-green);
+  font-size: 0.95rem;
+}
+
+/* Crossed off with a stroke of chalk. */
+.chip.done .chip-target::after,
+.crossed::after {
+  content: '';
+  position: absolute;
+  left: -8%;
+  right: -8%;
+  top: 50%;
+  height: 2.5px;
+  border-radius: 2px;
+  background: var(--chalk-red);
+  opacity: 0.9;
+  transform: rotate(-12deg);
 }
 
 .hud-main {
@@ -196,35 +507,50 @@ button.secondary {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
+  padding: 2px 0 6px;
+  border-bottom: 2px solid var(--chalk-ghost);
 }
 
+/* Scores chalked up and crossed off, with the live one big. */
 .remaining {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+  font-family: 'Cabin Sketch', Kalam, sans-serif;
 }
 
-.hud-label {
-  color: var(--muted);
-  font-size: 0.85rem;
+.crossed {
+  position: relative;
+  color: var(--chalk-faint);
+  font-size: 1.35rem;
+  text-decoration: none;
 }
 
-.hud-label strong {
-  color: var(--fg);
+.crossed-more {
+  color: var(--chalk-faint);
+}
+
+/* Narrow phones: room for two crossed-off scores. */
+@media (max-width: 380px) {
+  .remaining {
+    gap: 8px;
+  }
+
+  .remaining .crossed:not(:nth-last-of-type(-n + 2)) {
+    display: none;
+  }
+
+  .slot {
+    min-width: 2.7em;
+    font-size: 0.85rem;
+  }
 }
 
 .remaining-value {
-  font-size: 2.6rem;
-  font-weight: 800;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
-.hud-side {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
+  font-size: 3.4rem;
+  line-height: 0.95;
+  text-shadow: 0 0 8px rgba(242, 239, 230, 0.2);
 }
 
 .visit {
@@ -235,117 +561,177 @@ button.secondary {
 .slot {
   display: grid;
   place-items: center;
-  min-width: 3.2em;
-  height: 2em;
+  min-width: 3em;
+  height: 2.1em;
   padding: 0 6px;
-  border: 1px dashed var(--border);
-  border-radius: 6px;
+  border: 2px dashed var(--chalk-faint);
+  border-radius: var(--hand-soft);
+  font-size: 0.95rem;
   font-weight: 700;
-  font-size: 0.9rem;
 }
 
 .slot.filled {
   border-style: solid;
-  background: #182a20;
+  border-color: var(--chalk-dim);
 }
 
 .hint-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 2.25rem;
+  min-height: 2.4rem;
 }
 
 .toggle {
-  min-width: 44px;
-  padding: 4px 12px;
-  font-size: 0.85rem;
+  min-height: 36px;
+  padding: 2px 14px;
+  border-color: var(--chalk-faint);
   background: transparent;
-  border-color: var(--border);
-  color: var(--muted);
+  color: var(--chalk-dim);
+  font-size: 1rem;
 }
 
 .toggle.on {
-  border-color: #ffd23f;
-  color: #ffd23f;
+  border-color: var(--chalk-yellow);
+  color: var(--chalk-yellow);
 }
 
 .hint {
+  flex: 1;
+  text-align: left;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  font-size: 1.1rem;
+  letter-spacing: 0.03em;
+  color: var(--chalk-yellow);
+}
+
+.hud-label {
+  color: var(--chalk-dim);
+}
+
+.hud-label strong {
+  color: var(--chalk);
+  font-family: 'Cabin Sketch', Kalam, sans-serif;
+  font-size: 1.3rem;
 }
 
 .message {
   margin: 0;
   min-height: 1.4em;
+  font-size: 1.1rem;
   font-weight: 700;
+}
+
+.throw-prompt {
+  min-height: 1.4em;
 }
 
 /* ---------- Results ---------- */
 
 .total {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  align-items: baseline;
+  gap: 10px;
 }
 
 .total-value {
-  font-size: 3.5rem;
-  font-weight: 800;
-  line-height: 1;
+  font-family: 'Cabin Sketch', Kalam, sans-serif;
+  font-size: 5rem;
+  line-height: 0.9;
+  color: var(--chalk-yellow);
+  text-shadow: 0 0 12px rgba(246, 216, 107, 0.25);
+}
+
+.total .muted {
+  font-size: 1.4rem;
 }
 
 .per-target {
   border-collapse: collapse;
-  font-variant-numeric: tabular-nums;
+  font-size: 1.15rem;
 }
 
 .per-target th,
 .per-target td {
-  padding: 6px 16px;
+  padding: 4px 18px;
   text-align: left;
 }
 
 .per-target th {
-  color: var(--muted);
-  font-weight: 600;
-  font-size: 0.85rem;
+  color: var(--chalk-dim);
+  font-weight: 400;
+  font-size: 0.95rem;
 }
 
-.per-target tbody tr + tr td {
-  border-top: 1px solid var(--border);
+.per-target td:first-child {
+  font-family: 'Cabin Sketch', Kalam, sans-serif;
+  font-size: 1.35rem;
+}
+
+.per-target tbody tr td {
+  border-top: 2px dashed var(--chalk-ghost);
 }
 
 .rating {
   display: inline-block;
-  width: 0.8em;
-  height: 0.8em;
+  width: 0.75em;
+  height: 0.75em;
   margin-right: 8px;
-  border-radius: 50%;
-  vertical-align: -0.05em;
+  border-radius: 50% 45% 55% 48%;
+  vertical-align: -0.02em;
 }
 
 .rating.green {
-  background: #2fbf63;
+  background: var(--chalk-green);
 }
 
 .rating.yellow {
-  background: #f5c542;
+  background: var(--chalk-yellow);
 }
 
 .rating.red {
-  background: #e5484d;
+  background: var(--chalk-red);
 }
 
-.share-preview {
+.best-visit {
   margin: 0;
-  padding: 12px 16px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  font-size: 1.1rem;
+}
+
+.best-visit strong {
+  font-family: 'Cabin Sketch', Kalam, sans-serif;
+  font-size: 1.4rem;
+}
+
+/* The share text on a scrap of paper taped to the board. */
+.share-preview {
+  position: relative;
+  margin: 8px 0 4px;
+  padding: 16px 22px 12px;
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
   font: inherit;
+  font-size: 1.05rem;
   text-align: left;
   white-space: pre-wrap;
   user-select: all;
+  transform: rotate(-1.5deg);
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.4),
+    0 1px 0 rgba(0, 0, 0, 0.3);
+}
+
+.share-preview::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  width: 70px;
+  height: 22px;
+  margin-left: -35px;
+  background: rgba(255, 255, 240, 0.45);
+  transform: rotate(3deg);
 }
 
 /* ---------- Practice and next puzzle ---------- */
@@ -354,54 +740,43 @@ button.secondary {
 .badge.practice {
   align-self: center;
   margin: 0;
-  padding: 3px 12px;
-  border: 1px dashed #f5a524;
-  border-radius: 999px;
-  color: #f5a524;
-  font-size: 0.85rem;
+  padding: 2px 12px;
+  border: 2px dashed var(--chalk-orange);
+  border-radius: var(--hand-soft);
+  color: var(--chalk-orange);
+  font-size: 0.95rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+.screen.practice > .muted {
+  max-width: 420px;
 }
 
 .date-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-weight: 600;
-}
-
-.date-field input {
-  font: inherit;
-  min-height: 44px;
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #182a20;
-  color: var(--fg);
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  font-weight: 700;
 }
 
 .next-puzzle {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 0;
 }
 
 .next-puzzle p {
-  margin: 0;
+  margin: 0 0 6px;
   font-weight: 700;
 }
 
 .countdown {
-  font-size: 1.8rem;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  font-family: 'Cabin Sketch', Kalam, sans-serif;
+  font-size: 2.4rem;
+  line-height: 1.1;
   letter-spacing: 0.04em;
 }
 
@@ -412,34 +787,26 @@ button:disabled {
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 4px 12px;
-  font-size: 0.9rem;
-}
-
-button.link {
-  padding: 4px 8px;
-  border: none;
-  background: none;
-  color: var(--fg);
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  gap: 0 10px;
+  font-size: 0.95rem;
 }
 
 .tag {
-  padding: 1px 6px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  padding: 0 6px;
+  border: 1.5px solid var(--chalk-faint);
+  border-radius: var(--hand-soft);
   font-size: 0.75rem;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
 .account-error {
   flex-basis: 100%;
   max-width: 420px;
+  margin-top: 6px;
   padding: 8px 12px;
-  border: 1px solid #e5484d;
-  border-radius: 8px;
+  border: 2px solid var(--chalk-red);
+  border-radius: var(--hand-soft);
 }
 
 .account-error p {
@@ -454,15 +821,15 @@ button.link {
 
 .submission {
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .submission.ok {
-  color: #2fbf63;
+  color: var(--chalk-green);
 }
 
 .submission.error {
-  color: #ff8a80;
+  color: var(--chalk-red);
 }
 
 /* ---------- Leaderboard ---------- */
@@ -475,24 +842,18 @@ button.link {
 
 .date-nav button {
   min-width: 44px;
-  min-height: 44px;
   padding: 0;
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   line-height: 1;
-}
-
-.date-nav input {
-  font: inherit;
-  min-height: 44px;
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #182a20;
-  color: var(--fg);
 }
 
 .stats {
   margin: 0;
+}
+
+.stats strong {
+  font-family: 'Cabin Sketch', Kalam, sans-serif;
+  font-size: 1.2rem;
 }
 
 /* Scrolls inside itself, so the page doesn't scroll on long lists. */
@@ -501,33 +862,35 @@ button.link {
   max-width: 480px;
   max-height: min(60dvh, 560px);
   overflow-y: auto;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  border: 2px solid var(--chalk-faint);
+  border-radius: var(--hand-soft);
+  background: rgba(0, 0, 0, 0.12);
 }
 
 .board-table table {
   width: 100%;
   border-collapse: collapse;
-  font-variant-numeric: tabular-nums;
+  font-size: 1.05rem;
 }
 
 .board-table th {
   position: sticky;
   top: 0;
-  background: var(--bg);
-  color: var(--muted);
-  font-size: 0.8rem;
-  font-weight: 600;
+  z-index: 1;
+  background: var(--slate-deep);
+  color: var(--chalk-dim);
+  font-size: 0.9rem;
+  font-weight: 400;
 }
 
 .board-table th,
 .board-table td {
-  padding: 8px 10px;
+  padding: 6px 10px;
   text-align: left;
 }
 
 .board-table tbody tr + tr td {
-  border-top: 1px solid var(--border);
+  border-top: 2px dashed var(--chalk-ghost);
 }
 
 .board-table .rank,
@@ -537,8 +900,23 @@ button.link {
   text-align: right;
 }
 
+.board-table .rank,
 .board-table .darts {
-  font-weight: 700;
+  font-family: 'Cabin Sketch', Kalam, sans-serif;
+  font-size: 1.25rem;
+}
+
+/* Gold, silver and bronze chalk for the top three. */
+.board-table tbody tr:nth-child(1) .rank {
+  color: #f6d86b;
+}
+
+.board-table tbody tr:nth-child(2) .rank {
+  color: #d9dde3;
+}
+
+.board-table tbody tr:nth-child(3) .rank {
+  color: #e3a26f;
 }
 
 .board-table .name {
@@ -554,74 +932,76 @@ button.link {
 }
 
 .board-table tr.me td {
-  background: #2a3a1c;
+  background: rgba(246, 216, 107, 0.12);
   font-weight: 700;
 }
 
 .board-table tr.me td:first-child {
-  box-shadow: inset 3px 0 0 #ffd23f;
+  box-shadow: inset 3px 0 0 var(--chalk-yellow);
 }
 
 .board-table .you {
-  color: #ffd23f;
-  font-weight: 600;
+  color: var(--chalk-yellow);
+  font-weight: 700;
 }
 
 .board-table tr.gap td {
+  padding: 0;
   text-align: center;
-  color: var(--muted);
-  padding: 2px;
+  color: var(--chalk-dim);
 }
 
 .board-table tr.pinned td {
   position: sticky;
   bottom: 0;
-  border-top: 1px solid #ffd23f;
+  background: #333426;
+  border-top: 2px solid var(--chalk-yellow);
 }
 
 /* ---------- Player stats ---------- */
 
+/* A tally chalked on the board: no boxes, just lines between. */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
   width: 100%;
-  max-width: 480px;
+  max-width: 460px;
 }
 
 .tile {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 10px 6px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #142219;
+  gap: 0;
+  padding: 8px 6px 10px;
+  border-bottom: 2px dashed var(--chalk-ghost);
+}
+
+.tile:not(:nth-child(3n)) {
+  border-right: 2px dashed var(--chalk-ghost);
+}
+
+.tile:nth-last-child(-n + 3) {
+  border-bottom: none;
 }
 
 .tile-value {
-  font-size: 1.6rem;
-  font-weight: 800;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
+  font-family: 'Cabin Sketch', Kalam, sans-serif;
+  font-size: 2.1rem;
+  line-height: 1.05;
 }
 
 .tile-label {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.15;
 }
 
 .tile-detail {
-  font-size: 0.72rem;
+  font-size: 0.8rem;
+  line-height: 1.15;
 }
 
-/* ---------- Feel: sound toggle, checkout flash ---------- */
-
-.toggle.sound {
-  margin-left: auto;
-  font-size: 1.1rem;
-}
+/* ---------- Feel: checkout flash ---------- */
 
 /* "CHECKOUT!" over the board when a target is finished. */
 .checkout-flash {
@@ -629,20 +1009,22 @@ button.link {
   inset: 0;
   display: grid;
   place-items: center;
+  border-radius: 50%;
   pointer-events: none;
-  background: radial-gradient(circle, rgba(255, 210, 63, 0.35) 0%, rgba(255, 210, 63, 0) 60%);
+  background: radial-gradient(circle, rgba(246, 216, 107, 0.35) 0%, rgba(246, 216, 107, 0) 60%);
   animation: flash-glow 1100ms ease-out forwards;
 }
 
 .checkout-flash span {
-  font-size: clamp(1.8rem, 9.5vmin, 4rem);
-  font-weight: 900;
+  font-family: 'Cabin Sketch', Kalam, sans-serif;
+  font-size: clamp(2rem, 10.5vmin, 4.4rem);
+  font-weight: 700;
   letter-spacing: 0.04em;
-  color: #ffd23f;
-  -webkit-text-stroke: 2px #1a1a1a;
+  color: var(--chalk-yellow);
+  -webkit-text-stroke: 2px #161616;
   text-shadow:
-    0 4px 0 #1a1a1a,
-    0 0 24px rgba(255, 210, 63, 0.7);
+    0 4px 0 #161616,
+    0 0 24px rgba(246, 216, 107, 0.7);
   animation: flash-text 1100ms cubic-bezier(0.2, 1.4, 0.4, 1) forwards;
 }
 
@@ -686,29 +1068,41 @@ button.link {
   .checkout-flash span {
     animation-name: flash-glow;
   }
+
+  button,
+  button:hover:not(:disabled) {
+    transition: none;
+    transform: none;
+  }
 }
 
 /* ---------- How to play ---------- */
 
+/* A small chalkboard in a wooden frame. */
 .how-to {
   width: min(92vw, 440px);
   max-height: 90dvh;
   padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: #142219;
-  color: var(--fg);
+  border: 12px solid transparent;
+  border-radius: 6px;
+  /* Slate inside the border, wood under it. (Only the last layer may be a plain colour.) */
+  background:
+    var(--grain) padding-box,
+    linear-gradient(var(--slate), var(--slate)) padding-box,
+    var(--wood) border-box;
+  color: var(--chalk);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
 }
 
 .how-to::backdrop {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(10, 8, 6, 0.65);
 }
 
 .how-to-body {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 20px;
+  padding: 18px 20px 20px;
   text-align: left;
 }
 
@@ -721,8 +1115,16 @@ button.link {
   flex-direction: column;
   gap: 10px;
   margin: 0;
-  padding-left: 1.2em;
-  line-height: 1.4;
+  padding-left: 1.3em;
+}
+
+.how-to li::marker {
+  font-family: 'Cabin Sketch', Kalam, sans-serif;
+  color: var(--chalk-yellow);
+}
+
+.how-to strong {
+  color: var(--chalk-yellow);
 }
 
 .how-to form {
@@ -731,11 +1133,11 @@ button.link {
 }
 
 kbd {
-  padding: 1px 6px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  padding: 0 6px;
+  border: 1.5px solid var(--chalk-faint);
+  border-radius: var(--hand-soft);
   font: inherit;
-  font-size: 0.85em;
+  font-size: 0.9em;
 }
 
 /* ---------- Username ---------- */
@@ -750,24 +1152,11 @@ kbd {
 }
 
 .username-form label {
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .username-form input {
   width: 100%;
-  /* 16px or more stops iOS zooming in on focus. */
-  font: inherit;
-  font-size: max(1rem, 16px);
-  min-height: 44px;
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #182a20;
-  color: var(--fg);
-}
-
-.username-form input[aria-invalid='true'] {
-  border-color: #ff8a80;
 }
 
 /* ---------- Privacy policy and terms ---------- */
@@ -776,14 +1165,15 @@ kbd {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.85rem;
-  color: var(--muted);
+  font-size: 0.9rem;
+  color: var(--chalk-dim);
 }
 
 .legal-links a,
 .legal-body a {
   color: inherit;
-  text-underline-offset: 3px;
+  text-decoration-color: var(--chalk-faint);
+  text-underline-offset: 4px;
 }
 
 .legal-links a {
@@ -791,20 +1181,32 @@ kbd {
   padding: 12px 4px;
 }
 
+.legal h1 {
+  font-size: clamp(2rem, 8vw, 2.6rem);
+}
+
+/* Long reading: a plain typeface is kinder than chalk. */
 .legal-body {
   max-width: 640px;
   text-align: left;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-size: 1rem;
   line-height: 1.55;
 }
 
 .legal-body h2 {
   margin: 1.6em 0 0.4em;
-  font-size: 1.15rem;
+  font-size: 1.5rem;
 }
 
 .legal-body h3 {
   margin: 1.2em 0 0.3em;
-  font-size: 1rem;
+  font-size: 1.2rem;
 }
 
 .legal-body p,

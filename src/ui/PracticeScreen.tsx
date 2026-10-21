@@ -22,7 +22,12 @@ export function PracticeScreen({ today, onNavigate }: Props) {
   }
 
   return (
-    <section className="screen">
+    <section className="screen practice">
+      <div className="topbar">
+        <button className="link back" onClick={() => onNavigate({ name: 'menu' })}>
+          ‹ Menu
+        </button>
+      </div>
       <header className="title">
         <h2>Practice</h2>
         <p className="badge practice">Unranked</p>
@@ -48,16 +53,11 @@ export function PracticeScreen({ today, onNavigate }: Props) {
         </p>
       )}
       <div className="actions">
-        <button disabled={!valid} onClick={() => play(date)}>
+        <button className="primary" disabled={!valid} onClick={() => play(date)}>
           Play {valid ? date : ''}
         </button>
         <button className="secondary" onClick={randomDay}>
           Random day
-        </button>
-      </div>
-      <div className="actions">
-        <button className="secondary" onClick={() => onNavigate({ name: 'menu' })}>
-          Menu
         </button>
       </div>
     </section>

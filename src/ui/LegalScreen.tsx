@@ -67,17 +67,17 @@ function LegalPage({
 }) {
   return (
     <section className="screen legal">
+      <div className="topbar">
+        <button className="link back" onClick={() => onNavigate({ name: 'menu' })}>
+          ‹ Menu
+        </button>
+      </div>
       <header className="title">
         <h1>{title}</h1>
         <p className="muted">Daily Darts · last updated {LAST_UPDATED}</p>
       </header>
       <article className="legal-body">{children}</article>
       <LegalLinks onNavigate={onNavigate} />
-      <div className="actions">
-        <button className="secondary" onClick={() => onNavigate({ name: 'menu' })}>
-          Menu
-        </button>
-      </div>
     </section>
   )
 }
