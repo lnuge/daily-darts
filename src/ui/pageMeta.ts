@@ -130,7 +130,7 @@ export function escapeHtml(text: string): string {
     .replace(/"/g, '&quot;')
 }
 
-/** `siteUrl` without a trailing slash, like "https://dailydarts.com", or null if unknown. */
+/** `siteUrl` without a trailing slash, like "https://daily-darts.com", or null if unknown. */
 export function absoluteUrl(siteUrl: string | null, path: string): string | null {
   return siteUrl ? siteUrl.replace(/\/+$/, '') + path : null
 }

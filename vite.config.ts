@@ -4,7 +4,7 @@ import { loadEnv, type Plugin } from 'vite'
 import { defineConfig } from 'vitest/config'
 
 /**
- * Fills %SITE_URL% in index.html from VITE_SITE_URL (e.g. https://dailydarts.app),
+ * Fills %SITE_URL% in index.html from VITE_SITE_URL (e.g. https://daily-darts.com),
  * so link previews get the absolute URLs they need. Without it (local builds),
  * tags that need an absolute URL are dropped and the image path stays relative.
  */

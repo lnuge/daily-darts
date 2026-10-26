@@ -95,29 +95,29 @@ Worker; this app has none):
 The domain is already on Cloudflare, so this is a few clicks:
 
 1. Worker `daily-darts` → **Settings → Domains & Routes → Add → Custom domain**.
-2. Enter the domain, e.g. `dailydarts.com` → **Add domain**. Cloudflare creates the DNS
+2. Enter the domain, e.g. `daily-darts.com` → **Add domain**. Cloudflare creates the DNS
    record and the HTTPS certificate; it's usually live within a few minutes.
    If it complains that a DNS record already exists for that name (a parking page,
    say), delete that record under the domain's **DNS → Records** and try again.
-3. Optional: add `www.dailydarts.com` the same way, or redirect it to the bare domain
+3. Optional: add `www.daily-darts.com` the same way, or redirect it to the bare domain
    with a **Redirect Rule** on the zone.
 4. Optional: under **Domains & Routes**, disable the `workers.dev` URL so there's only
    one address.
 
 Then point everything else at the new address:
 
-- **Cloudflare:** set the build variable `VITE_SITE_URL=https://dailydarts.com` and
+- **Cloudflare:** set the build variable `VITE_SITE_URL=https://daily-darts.com` and
   redeploy.
 - **Supabase → Authentication → URL Configuration:** **Site URL**
-  `https://dailydarts.com`; **Redirect URLs** add `https://dailydarts.com/**` (keep the
+  `https://daily-darts.com`; **Redirect URLs** add `https://daily-darts.com/**` (keep the
   localhost ones for development).
 - **Google Cloud → APIs & Services → Credentials →** your OAuth client: add
-  `https://dailydarts.com` to **Authorized JavaScript origins**. (The redirect URI
+  `https://daily-darts.com` to **Authorized JavaScript origins**. (The redirect URI
   stays the Supabase callback URL.) If the consent screen is still in **Testing**,
   publish it so anyone can sign in.
 - **Google Cloud → Google Auth Platform → Branding:** app name `Daily Darts`, home page
-  `https://dailydarts.com`, privacy policy `https://dailydarts.com/privacy`, terms
-  `https://dailydarts.com/terms`, authorized domains `dailydarts.com` and
+  `https://daily-darts.com`, privacy policy `https://daily-darts.com/privacy`, terms
+  `https://daily-darts.com/terms`, authorized domains `daily-darts.com` and
   `your-project-ref.supabase.co`. Skip the logo unless you want to go through Google's
   verification (a logo requires it).
 

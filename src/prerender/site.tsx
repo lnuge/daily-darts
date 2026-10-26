@@ -46,7 +46,7 @@ export type SiteFile = {
 export type BuildSiteOptions = {
   /** The built index.html. */
   template: string
-  /** The public site URL, like "https://dailydarts.com", or null if unknown. */
+  /** The public site URL, like "https://daily-darts.com", or null if unknown. */
   siteUrl?: string | null
   /** When the site is being built; decides "today" and what's in the archive. */
   nowMs: number
