@@ -1,4 +1,4 @@
-import { addDays, formatDateKey, parseDateKey } from '../game/date'
+import { addDays, formatDateKey, parseDateKey, toDayNumber } from '../game/date'
 import { LAUNCH_DATE } from '../game/puzzle'
 
 /**
@@ -40,4 +40,44 @@ export function practiceRange(today: string): { min: string; max: string } {
   const max = addDays(today, -1)
   const min = today > LAUNCH_DATE ? LAUNCH_DATE : addDays(today, -PRE_LAUNCH_PRACTICE_DAYS)
   return { min, max }
+}
+
+const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+const MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+]
+
+/**
+ * "Saturday 14 November 2026". Spelled out here rather than with Intl, whose
+ * output varies between browsers and Node versions, so prerendered pages and
+ * the app always agree.
+ */
+export function formatLongDate(dateKey: string): string {
+  const { year, month, day } = parseDateKey(dateKey)
+  // Day 0 (1970-01-01) was a Thursday.
+  const weekday = WEEKDAYS[(((toDayNumber(dateKey) + 3) % 7) + 7) % 7]
+  return `${weekday} ${day} ${MONTHS[month - 1]} ${year}`
+}
+
+/** "14 Nov 2026": the short form, for lists. */
+export function formatShortDate(dateKey: string): string {
+  const { year, month, day } = parseDateKey(dateKey)
+  return `${day} ${MONTHS[month - 1].slice(0, 3)} ${year}`
+}
+
+/** "November 2026". */
+export function formatMonth(dateKey: string): string {
+  const { year, month } = parseDateKey(dateKey)
+  return `${MONTHS[month - 1]} ${year}`
 }

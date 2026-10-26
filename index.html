@@ -3,23 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Daily Darts · one darts puzzle a day</title>
-    <meta
-      name="description"
-      content="A daily darts checkout puzzle. Everyone gets the same three scores; finish each on a double in as few darts as you can. Free, in your browser."
-    />
     <meta name="theme-color" content="#1e2523" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
     <!--
-      Link previews (Open Graph, used by iMessage, WhatsApp, Slack, Discord, Facebook, X...).
-      %SITE_URL% is filled in at build time from VITE_SITE_URL (see vite.config.ts).
+      Everything between page-meta:start and page-meta:end is per page: title, description,
+      canonical URL and link previews (Open Graph, used by iMessage, WhatsApp, Slack, X...).
+      The build replaces it on every prerendered page (scripts/prerender.mjs, from
+      src/ui/pageMeta.ts), and the app keeps it up to date as you move around
+      (useDocumentMeta). What's here is the home page's, for `npm run dev`. The site URL
+      placeholders are filled in from VITE_SITE_URL at build time (see vite.config.ts).
     -->
+    <!--page-meta:start-->
+    <title>Daily Darts – A New Darts Checkout Puzzle Every Day</title>
+    <meta
+      name="description"
+      content="A free darts checkout puzzle you play in your browser. Every day everyone gets the same three scores: finish each one on a double in as few darts as you can."
+    />
     <link rel="canonical" href="%SITE_URL%/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Daily Darts" />
-    <meta property="og:title" content="Daily Darts" />
+    <meta property="og:title" content="Daily Darts – A New Darts Checkout Puzzle Every Day" />
     <meta
       property="og:description"
       content="One darts puzzle a day, the same for everyone. Check out three scores in the fewest darts."
@@ -30,15 +35,17 @@
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="A dartboard next to the words Daily Darts" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Daily Darts" />
+    <meta name="twitter:title" content="Daily Darts – A New Darts Checkout Puzzle Every Day" />
     <meta
       name="twitter:description"
       content="One darts puzzle a day, the same for everyone. Check out three scores in the fewest darts."
     />
     <meta name="twitter:image" content="%SITE_URL%/og-image.png" />
+    <!--page-meta:end-->
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Prerendered pages put the page's HTML here; the app replaces it when it starts. -->
+    <div id="root"><!--app--></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

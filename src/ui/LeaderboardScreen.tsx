@@ -4,6 +4,7 @@ import { practiceRange } from '../lib/daily'
 import { fetchLeaderboard, type Leaderboard, type LeaderboardEntry } from '../lib/leaderboard'
 import { supabase } from '../lib/supabase'
 import type { Navigate } from './App'
+import { RouteLink } from './RouteLink'
 import { pathFor } from './routes'
 
 type Props = {
@@ -11,6 +12,8 @@ type Props = {
   /** Which day to open on; defaults to today. */
   date?: string
   onNavigate: Navigate
+  /** Scores to show before fetching: prerendered pages are built with them. */
+  initial?: Leaderboard
 }
 
 type Load =
@@ -35,14 +38,16 @@ function EntryRow({ entry, pinned = false }: { entry: LeaderboardEntry; pinned?:
   )
 }
 
-export function LeaderboardScreen({ today, date: initialDate, onNavigate }: Props) {
+export function LeaderboardScreen({ today, date: initialDate, onNavigate, initial }: Props) {
   // Past leaderboards go back as far as practice does (launch day, or 30 days before it).
   const { min } = practiceRange(today)
   const [date, setDate] = useState(initialDate ?? today)
   // Keyed by date and request, so a slow answer for a day you've left is ignored.
-  const [load, setLoad] = useState<{ key: string; value: Load } | null>(null)
   const [reloads, setReloads] = useState(0)
   const key = `${date}#${reloads}`
+  const [load, setLoad] = useState<{ key: string; value: Load } | null>(() =>
+    initial ? { key, value: { status: 'ok', data: initial } } : null,
+  )
 
   useEffect(() => {
     if (!supabase) return
@@ -77,7 +82,7 @@ export function LeaderboardScreen({ today, date: initialDate, onNavigate }: Prop
         </button>
       </div>
       <header className="title">
-        <h2>Leaderboard</h2>
+        <h1>Leaderboard</h1>
         <p className="muted">{date === today ? "Today's puzzle" : `Puzzle for ${date}`}</p>
       </header>
 
@@ -132,6 +137,15 @@ export function LeaderboardScreen({ today, date: initialDate, onNavigate }: Prop
           Refresh
         </button>
       )}
+
+      <p className="muted page-note">
+        Every day's puzzle has its own leaderboard. Fewest darts wins, and ties go to whoever
+        finished first. Past puzzles, with their best possible finishes, are in the{' '}
+        <RouteLink to={{ name: 'archive' }} onNavigate={onNavigate}>
+          archive
+        </RouteLink>
+        .
+      </p>
     </section>
   )
 }

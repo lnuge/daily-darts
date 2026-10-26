@@ -50,10 +50,14 @@ const entry = (raw: RawEntry, isMe: boolean): LeaderboardEntry => ({
 })
 
 /** Throws if Supabase isn't configured or the request fails. */
-export async function fetchLeaderboard(date: string): Promise<Leaderboard> {
+/** `limit`: how many of the top entries to return (the server's default is 100). */
+export async function fetchLeaderboard(date: string, limit?: number): Promise<Leaderboard> {
   if (!supabase) throw new Error('Supabase is not configured.')
   // Sends the player's session if they have one, so `me` is filled in.
-  const { data, error } = await supabase.rpc('get_leaderboard', { p_date: date })
+  const { data, error } = await supabase.rpc(
+    'get_leaderboard',
+    limit === undefined ? { p_date: date } : { p_date: date, p_limit: limit },
+  )
   if (error) throw new Error(error.message)
   const raw = data as RawLeaderboard
   return {

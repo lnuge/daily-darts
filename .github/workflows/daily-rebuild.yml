@@ -1,0 +1,33 @@
+# Rebuilds the site once a day, so the archive and sitemap.xml pick up the
+# puzzle that just closed (pages are prerendered at build time; see
+# src/prerender/site.tsx). It calls a Cloudflare Workers Builds deploy hook,
+# which builds and deploys main exactly as a push would.
+#
+# Setup (once): create a deploy hook in Cloudflare (Worker daily-darts ->
+# Settings -> Builds -> Deploy Hooks, branch main) and save its URL as the
+# repository secret CLOUDFLARE_DEPLOY_HOOK_URL. See docs/deploy-cloudflare.md.
+
+name: Daily rebuild
+
+on:
+  schedule:
+    # 18:20 UTC: a date joins the archive at 18:00 UTC the day after, once
+    # it's closed everywhere and the server has stopped taking rounds for it.
+    - cron: '20 18 * * *'
+  workflow_dispatch: # "Run workflow" button, to rebuild by hand
+
+permissions: {}
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger the Cloudflare deploy hook
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.CLOUDFLARE_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$DEPLOY_HOOK_URL" ]; then
+            echo "::warning::The CLOUDFLARE_DEPLOY_HOOK_URL secret isn't set, so nothing was rebuilt."
+            exit 0
+          fi
+          curl --fail --silent --show-error --retry 3 -X POST "$DEPLOY_HOOK_URL"

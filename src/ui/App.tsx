@@ -3,14 +3,19 @@ import { todayKey } from '../lib/daily'
 import { rankedStatus } from '../lib/progress'
 import { installAudioUnlock } from '../lib/sound'
 import { loadJson, saveJson } from '../lib/storage'
+import { ArchiveDayScreen } from './ArchiveDayScreen'
+import { ArchiveScreen } from './ArchiveScreen'
 import { GameScreen } from './GameScreen'
 import { HowToPlay } from './HowToPlay'
+import { HowToPlayPage } from './HowToPlayPage'
 import { LeaderboardScreen } from './LeaderboardScreen'
 import { PrivacyScreen, TermsScreen } from './LegalScreen'
 import { MenuScreen } from './MenuScreen'
 import { PracticeScreen } from './PracticeScreen'
 import { ProfileScreen } from './ProfileScreen'
+import { readPrerenderData } from './prerenderData'
 import { pathFor, routeFromPath, type Route } from './routes'
+import { useDocumentMeta } from './useDocumentMeta'
 import { useToday } from './useToday'
 
 // Ranked: today's puzzle, saved and locked once finished. Practice: any past day, never saved.
@@ -38,15 +43,26 @@ function initialRoute(): Route {
   return opening
 }
 
-const isLegal = (route: Route) => route.name === 'privacy' || route.name === 'terms'
+/**
+ * Whether the how-to-play dialog may open by itself on a first visit: on the
+ * menu and the game, not over pages people arrive at by link (the rules, the
+ * archive, the legal pages...).
+ */
+const isPlayScreen = (route: Route) => route.name === 'menu' || route.name === 'game'
 
 export function App() {
   const [route, setRouteState] = useState<Route>(initialRoute)
+  // What the page was prerendered with, for the screen it opened on (read once).
+  const [prerendered] = useState(() => readPrerenderData(pathFor(route)))
+  useDocumentMeta(route)
 
   // Moving between screens adds a history entry, so Back works.
   const setRoute: Navigate = useCallback((next) => {
     const path = pathFor(next)
-    if (path !== window.location.pathname) window.history.pushState(null, '', path)
+    if (path !== window.location.pathname) {
+      window.history.pushState(null, '', path)
+      window.scrollTo(0, 0)
+    }
     setRouteState(next)
   }, [])
 
@@ -61,7 +77,7 @@ export function App() {
   // Shown automatically on the first visit, and from the menu after that. Not over
   // the privacy policy or terms: people (and Google's reviewers) arrive there by link.
   const [howTo, setHowTo] = useState(
-    () => loadJson<boolean>('howto-seen') !== true && !isLegal(route),
+    () => loadJson<boolean>('howto-seen') !== true && isPlayScreen(route),
   )
   const closeHowTo = () => {
     saveJson('howto-seen', true)
@@ -73,9 +89,7 @@ export function App() {
 
   return (
     <main className="app">
-      {route.name === 'menu' && (
-        <MenuScreen today={today} onNavigate={setRoute} onHowToPlay={() => setHowTo(true)} />
-      )}
+      {route.name === 'menu' && <MenuScreen today={today} onNavigate={setRoute} />}
       {route.name === 'game' && (
         <GameScreen
           // A different game is a fresh component, not a reused one.
@@ -88,7 +102,22 @@ export function App() {
       {route.name === 'practice' && <PracticeScreen today={today} onNavigate={setRoute} />}
       {route.name === 'profile' && <ProfileScreen today={today} onNavigate={setRoute} />}
       {route.name === 'leaderboard' && (
-        <LeaderboardScreen today={today} date={route.date} onNavigate={setRoute} />
+        <LeaderboardScreen
+          today={today}
+          date={route.date}
+          onNavigate={setRoute}
+          initial={prerendered?.path === pathFor(route) ? prerendered.leaderboard : undefined}
+        />
+      )}
+      {route.name === 'howToPlay' && <HowToPlayPage today={today} onNavigate={setRoute} />}
+      {route.name === 'archive' && <ArchiveScreen onNavigate={setRoute} />}
+      {route.name === 'archiveDay' && (
+        <ArchiveDayScreen
+          key={route.date}
+          date={route.date}
+          onNavigate={setRoute}
+          initial={prerendered?.path === pathFor(route) ? prerendered.archiveScores : undefined}
+        />
       )}
       {route.name === 'privacy' && <PrivacyScreen onNavigate={setRoute} />}
       {route.name === 'terms' && <TermsScreen onNavigate={setRoute} />}

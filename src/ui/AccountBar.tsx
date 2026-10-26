@@ -30,8 +30,6 @@ export function AccountBar() {
 
   return (
     <div className="account">
-      {auth.status === 'loading' && <span className="muted">Checking sign-in…</span>}
-
       {auth.status === 'signed-out' && (
         <>
           <span className="muted">Playing as a guest</span>

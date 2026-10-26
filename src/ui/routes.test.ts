@@ -14,6 +14,9 @@ describe('routes', () => {
     ['/profile', { name: 'profile' }],
     ['/privacy', { name: 'privacy' }],
     ['/terms', { name: 'terms' }],
+    ['/how-to-play', { name: 'howToPlay' }],
+    ['/archive', { name: 'archive' }],
+    ['/archive/2026-11-20', { name: 'archiveDay', date: '2026-11-20' }],
   ])('round-trips %s', (path, route) => {
     expect(routeFromPath(path, TODAY)).toEqual(route)
     expect(pathFor(route)).toBe(path)
@@ -24,12 +27,17 @@ describe('routes', () => {
     expect(routeFromPath('/play/', TODAY)).toEqual({ name: 'game', mode: 'ranked', date: TODAY })
   })
 
-  it.each(['/nope', '/play/extra', '/profile/x', '/terms/x', '/a/b/c', '/index.html'])(
-    'sends unknown path %s to the menu',
-    (path) => {
-      expect(routeFromPath(path, TODAY)).toEqual({ name: 'menu' })
-    },
-  )
+  it.each([
+    '/nope',
+    '/play/extra',
+    '/profile/x',
+    '/terms/x',
+    '/how-to-play/x',
+    '/a/b/c',
+    '/index.html',
+  ])('sends unknown path %s to the menu', (path) => {
+    expect(routeFromPath(path, TODAY)).toEqual({ name: 'menu' })
+  })
 
   it("won't practise today, a future day, a day before launch, or a bad date", () => {
     for (const day of [TODAY, '2026-12-16', '2026-10-31', '2026-02-30', 'yesterday']) {
@@ -41,4 +49,11 @@ describe('routes', () => {
     expect(routeFromPath('/leaderboard/2026-12-16', TODAY)).toEqual({ name: 'leaderboard' })
     expect(routeFromPath('/leaderboard/latest', TODAY)).toEqual({ name: 'leaderboard' })
   })
+})
+
+it('sends a bad, future or pre-launch archive date to the archive list', () => {
+  for (const day of [TODAY, '2026-12-16', '2026-10-31', '2026-02-30', 'latest']) {
+    expect(routeFromPath(`/archive/${day}`, TODAY)).toEqual({ name: 'archive' })
+  }
+  expect(routeFromPath('/archive/2026-11-20/x', TODAY)).toEqual({ name: 'menu' })
 })

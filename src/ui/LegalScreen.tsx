@@ -1,9 +1,9 @@
-import type { MouseEvent, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import type { Navigate } from './App'
-import { pathFor, type Route } from './routes'
+import { RouteLink } from './RouteLink'
 
 /** Change this whenever either page's wording changes. */
-const LAST_UPDATED = '21 October 2026'
+const LAST_UPDATED = '26 October 2026'
 
 /** Set as a build variable; see docs/deploy-cloudflare.md. */
 const CONTACT_EMAIL = import.meta.env.VITE_CONTACT_EMAIL?.trim()
@@ -13,31 +13,6 @@ function Contact() {
     <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
   ) : (
     <strong>[contact email not set: add the VITE_CONTACT_EMAIL build variable]</strong>
-  )
-}
-
-/**
- * A real link (so it can be opened in a new tab and crawled) that navigates
- * in-app when clicked normally.
- */
-function RouteLink({
-  to,
-  onNavigate,
-  children,
-}: {
-  to: Route
-  onNavigate: Navigate
-  children: ReactNode
-}) {
-  const onClick = (e: MouseEvent<HTMLAnchorElement>) => {
-    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
-    e.preventDefault()
-    onNavigate(to)
-  }
-  return (
-    <a href={pathFor(to)} onClick={onClick}>
-      {children}
-    </a>
   )
 }
 
@@ -141,6 +116,12 @@ export function PrivacyScreen({ onNavigate }: { onNavigate: Navigate }) {
       <p>
         On the leaderboard: your player name, how many darts your round took, and the time it was
         verified. Your tap timings, account details and email are never public.
+      </p>
+      <p>
+        The leaderboards and the puzzle archive are public web pages that search engines can find
+        and index. Each archived day lists its top ten players by player name and number of darts.
+        The archive is rebuilt every day, so a new username or a deleted account shows there within
+        a day (search engines may take longer to catch up).
       </p>
 
       <h2>Cookies and tracking</h2>

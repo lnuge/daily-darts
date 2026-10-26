@@ -1,15 +1,22 @@
 import { useMemo } from 'react'
 import { generateDailyPuzzle } from '../game/puzzle'
 import { rankedStatus } from '../lib/progress'
+import { AboutDailyDarts } from './AboutDailyDarts'
 import type { Navigate } from './App'
 import { AccountBar } from './AccountBar'
 import { BoardCanvas } from './BoardCanvas'
 import { LegalLinks } from './LegalScreen'
+import { RouteLink } from './RouteLink'
 
 type Props = {
   today: string
   onNavigate: Navigate
-  onHowToPlay: () => void
+  /**
+   * Built ahead of time as a static page (src/prerender): leave out what's
+   * only true on the day it was built (the date and today's checkouts). The
+   * app fills them in when it starts.
+   */
+  prerendered?: boolean
 }
 
 /** "Tuesday 21 October", in the player's own language. */
@@ -22,7 +29,7 @@ function longDate(dateKey: string): string {
   })
 }
 
-export function MenuScreen({ today, onNavigate, onHowToPlay }: Props) {
+export function MenuScreen({ today, onNavigate, prerendered = false }: Props) {
   const status = useMemo(() => rankedStatus(today), [today])
   const puzzle = useMemo(() => generateDailyPuzzle(today), [today])
   const play = () => onNavigate({ name: 'game', mode: 'ranked', date: today })
@@ -32,8 +39,14 @@ export function MenuScreen({ today, onNavigate, onHowToPlay }: Props) {
       <header className="masthead">
         <h1 className="wordmark">Daily Darts</h1>
         <p className="muted">
-          {puzzle.puzzleNumber >= 0 && <>No. {puzzle.puzzleNumber} · </>}
-          {longDate(today)}
+          {prerendered ? (
+            'A new darts checkout puzzle every day'
+          ) : (
+            <>
+              {puzzle.puzzleNumber >= 0 && <>No. {puzzle.puzzleNumber} · </>}
+              {longDate(today)}
+            </>
+          )}
         </p>
       </header>
 
@@ -44,9 +57,11 @@ export function MenuScreen({ today, onNavigate, onHowToPlay }: Props) {
       <div className="specials" aria-label="Today's checkouts">
         <span className="specials-label">Today's checkouts</span>
         <span className="specials-targets">
-          {puzzle.targets.map((t, i) => (
-            <span key={i}>{t}</span>
-          ))}
+          {prerendered ? (
+            <span aria-hidden="true">? · ? · ?</span>
+          ) : (
+            puzzle.targets.map((t, i) => <span key={i}>{t}</span>)
+          )}
         </span>
       </div>
 
@@ -59,21 +74,25 @@ export function MenuScreen({ today, onNavigate, onHowToPlay }: Props) {
       </button>
 
       <nav className="menu-links" aria-label="More">
-        <button className="link" onClick={() => onNavigate({ name: 'practice' })}>
-          Practice
-        </button>
-        <button className="link" onClick={() => onNavigate({ name: 'leaderboard' })}>
+        <RouteLink to={{ name: 'leaderboard' }} onNavigate={onNavigate} className="link">
           Leaderboard
-        </button>
-        <button className="link" onClick={() => onNavigate({ name: 'profile' })}>
+        </RouteLink>
+        <RouteLink to={{ name: 'archive' }} onNavigate={onNavigate} className="link">
+          Archive
+        </RouteLink>
+        <RouteLink to={{ name: 'practice' }} onNavigate={onNavigate} className="link">
+          Practice
+        </RouteLink>
+        <RouteLink to={{ name: 'profile' }} onNavigate={onNavigate} className="link">
           Profile
-        </button>
-        <button className="link" onClick={onHowToPlay}>
+        </RouteLink>
+        <RouteLink to={{ name: 'howToPlay' }} onNavigate={onNavigate} className="link">
           How to play
-        </button>
+        </RouteLink>
       </nav>
 
       <AccountBar />
+      <AboutDailyDarts onNavigate={onNavigate} />
       <LegalLinks onNavigate={onNavigate} />
     </section>
   )

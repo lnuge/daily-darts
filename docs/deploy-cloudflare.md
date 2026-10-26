@@ -17,8 +17,13 @@ Commands are PowerShell, run from `C:\Users\laird\code\daily-darts`.
   runtime locally.
 - `wrangler.jsonc` declares a Worker named `daily-darts` with static assets and
   `"not_found_handling": "single-page-application"`: any path that isn't a file
-  (`/leaderboard`, `/practice/2026-10-15`, ...) gets `index.html`, and the app shows
-  the right screen. So refreshing or sharing any page works.
+  (`/play`, `/practice/2026-10-15`, ...) gets `index.html`, and the app shows the right
+  screen. So refreshing or sharing any page works.
+- `npm run build` also prerenders the pages search engines should read (home, how to
+  play, leaderboard, archive, every archived day, privacy, terms) into real HTML files
+  (`dist/archive/2026-11-14.html` is served at `/archive/2026-11-14`), and writes
+  `sitemap.xml` and `robots.txt`. The archive grows every day, so the site needs
+  rebuilding daily: step 5.
 - `npm run deploy` builds and deploys from your PC (`wrangler deploy`), handy before
   Workers Builds is connected.
 
@@ -116,7 +121,39 @@ Then point everything else at the new address:
   `your-project-ref.supabase.co`. Skip the logo unless you want to go through Google's
   verification (a logo requires it).
 
-## 5. Check link previews
+## 5. Rebuild every day (archive and sitemap)
+
+Every day at 18:00 UTC the previous day's puzzle has closed everywhere, and it should
+join the archive and the sitemap. A small GitHub workflow
+(`.github/workflows/daily-rebuild.yml`) asks Cloudflare to rebuild at 18:20 UTC. It
+needs a **deploy hook**, a private URL that starts a build:
+
+1. Cloudflare: Worker `daily-darts` → **Settings → Builds → Deploy Hooks → Create
+   deploy hook**. Name it `daily rebuild`, branch `main`. Copy the URL it shows. Treat it
+   like a password: anyone with it can start builds.
+2. GitHub: the repository → **Settings → Secrets and variables → Actions → New
+   repository secret**. Name `CLOUDFLARE_DEPLOY_HOOK_URL`, value the URL. **Add secret**.
+3. Try it: GitHub → **Actions → Daily rebuild → Run workflow**. A minute later Cloudflare's
+   **Deployments** list shows a new build started by the deploy hook.
+
+GitHub pauses scheduled workflows in a repository with no commits for 60 days. If that
+happens it emails you; **Actions → Daily rebuild → Enable workflow** turns it back on.
+
+## 6. Tell Google about the site
+
+1. Go to [Google Search Console](https://search.google.com/search-console) and add a
+   **Domain** property for your domain. It gives you a TXT record: add it under the
+   domain's **DNS → Records** in Cloudflare, then **Verify**.
+2. **Sitemaps** → enter `sitemap.xml` → **Submit**. It should say "Success" and list the
+   pages it found (home, how to play, leaderboard, archive, each archived day, privacy,
+   terms).
+3. **URL inspection** → paste an archive page's URL → **Test live URL** → **View tested
+   page**: the HTML should contain the page's text. Then **Request indexing** for the home
+   page.
+
+Bing Webmaster Tools can import the site straight from Search Console.
+
+## 7. Check link previews
 
 Paste the site URL into a chat (Slack, Discord, WhatsApp, iMessage) or a preview checker
 such as the Facebook Sharing Debugger or LinkedIn Post Inspector. You should see the
@@ -124,7 +161,7 @@ title **Daily Darts**, the one-line description, and the dartboard image
 (`public/og-image.png`, 1200×630). Previews are cached by each service, so a fix can take
 a while to show; the debuggers have a "scrape again" button.
 
-## 6. Production checklist
+## 8. Production checklist
 
 Use a private/incognito window for a true first visit, and a phone for at least one
 pass.
@@ -140,6 +177,8 @@ pass.
       screen (no 404). Back button works.
 - [ ] **Privacy** and **Terms** at the foot of the menu open `/privacy` and `/terms`, and
       both show your contact email (not a "not set" warning).
+- [ ] View the page source (Ctrl+U) of `/`, `/archive` and an archived day: the text is
+      in the HTML, each has its own `<title>`, and `/sitemap.xml` lists your domain's URLs.
 
 **Submitting a round**
 

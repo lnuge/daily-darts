@@ -87,6 +87,8 @@ let redirectError: AuthRedirectError | null | undefined
  * and removes it from the address bar, so a reload doesn't show it again.
  */
 export function takeAuthRedirectError(): AuthRedirectError | null {
+  // No address bar when pages are prerendered at build time.
+  if (typeof window === 'undefined') return null
   if (redirectError === undefined) {
     const query = new URLSearchParams(window.location.search)
     const hash = new URLSearchParams(window.location.hash.slice(1))

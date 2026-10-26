@@ -10,6 +10,9 @@
  *   /leaderboard/2026-10-15    that day's leaderboard
  *   /profile                   stats and account
  *   /privacy, /terms           privacy policy and terms of service
+ *   /how-to-play               the rules
+ *   /archive                   every past puzzle
+ *   /archive/2026-11-14        one past puzzle: targets, best finishes, top scores
  *
  * On Cloudflare, any path that isn't a file serves index.html (see
  * wrangler.jsonc), and routeFromPath decides what to show.
@@ -28,6 +31,9 @@ export type Route =
   | { name: 'profile' }
   | { name: 'privacy' }
   | { name: 'terms' }
+  | { name: 'howToPlay' }
+  | { name: 'archive' }
+  | { name: 'archiveDay'; date: string }
 
 export function pathFor(route: Route): string {
   switch (route.name) {
@@ -45,6 +51,12 @@ export function pathFor(route: Route): string {
       return '/privacy'
     case 'terms':
       return '/terms'
+    case 'howToPlay':
+      return '/how-to-play'
+    case 'archive':
+      return '/archive'
+    case 'archiveDay':
+      return `/archive/${route.date}`
   }
 }
 
@@ -89,6 +101,16 @@ export function routeFromPath(path: string, today: string): Route {
     case 'privacy':
     case 'terms':
       return second === undefined ? { name: first } : { name: 'menu' }
+    case 'how-to-play':
+      return second === undefined ? { name: 'howToPlay' } : { name: 'menu' }
+    case 'archive': {
+      // Any past practice day; the screen itself says if a day isn't archived yet.
+      if (second === undefined) return { name: 'archive' }
+      const { min, max } = practiceRange(today)
+      return isDateKey(second) && second >= min && second <= max
+        ? { name: 'archiveDay', date: second }
+        : { name: 'archive' }
+    }
     default:
       return { name: 'menu' }
   }

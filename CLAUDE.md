@@ -42,12 +42,13 @@ Don't disable those rules; restructure the code instead.
 
 ## Folder structure
 
-| Folder       | What goes there                                                                 | May import from         |
-| ------------ | ------------------------------------------------------------------------------- | ----------------------- |
-| `src/game`   | Pure game logic: state, rules, scoring, seeded RNG. Runs in browser and server. | nothing outside itself  |
-| `src/render` | Canvas drawing. Reads game state, never mutates it.                             | `game`                  |
-| `src/ui`     | React screens: menu, game host, results, leaderboard.                           | `game`, `render`, `lib` |
-| `src/lib`    | Side effects: Supabase client, localStorage, today's date key.                  | `game`                  |
+| Folder          | What goes there                                                                    | May import from         |
+| --------------- | ---------------------------------------------------------------------------------- | ----------------------- |
+| `src/game`      | Pure game logic: state, rules, scoring, seeded RNG. Runs in browser and server.    | nothing outside itself  |
+| `src/render`    | Canvas drawing. Reads game state, never mutates it.                                | `game`                  |
+| `src/ui`        | React screens: menu, game host, results, leaderboard.                              | `game`, `render`, `lib` |
+| `src/lib`       | Side effects: Supabase client, localStorage, today's date key.                     | `game`                  |
+| `src/prerender` | Build-time static pages, sitemap.xml, robots.txt (run by `scripts/prerender.mjs`). | `game`, `lib`, `ui`     |
 
 The canvas game loop (requestAnimationFrame, pointer events) lives outside
 `src/game`. It collects inputs, feeds them to pure game functions, and hands
@@ -304,8 +305,9 @@ XXXXXX` names have a space, so they never clash with usernames and needn't be un
 - Checkout: `ThrowBoard`'s `celebrate` counter triggers a Web Animations shake (skipped
   for `prefers-reduced-motion`) and a CSS "CHECKOUT!" flash. Both are transform/opacity
   only, so they run on the compositor without redrawing canvases.
-- How to play: `HowToPlay` (`<dialog>`), shown until `daily-darts:howto-seen`, and from
-  the menu.
+- How to play: `HowToPlay` (`<dialog>`), shown on a first visit to the menu or game until
+  `daily-darts:howto-seen`; the menu links to the full `/how-to-play` page. Both use
+  `HowToPlaySteps`.
 - Taps: `ThrowBoard` ignores taps within `MIN_TAP_GAP_MS` (120 ms) of the last one and
   non-primary pointers (second fingers). Test bots driving the real UI must keep taps at
   least that far apart (`findInput(..., minGapMs)`). Every button is at least 44x44 px;
@@ -320,7 +322,8 @@ XXXXXX` names have a space, so they never clash with usernames and needn't be un
 
 - Every screen has a URL (`src/ui/routes.ts`, pure and tested): `/`, `/play`,
   `/practice`, `/practice/<date>`, `/leaderboard`, `/leaderboard/<date>`, `/profile`,
-  `/privacy`, `/terms`.
+  `/privacy`, `/terms`, `/how-to-play`, `/archive`, `/archive/<date>`. Navigation links are
+  `RouteLink` (a real `<a href>`, so crawlers follow it) wherever they aren't actions.
   `App` pushes history on navigation and listens for `popstate`; unknown or invalid
   paths fall back to the nearest screen. When tidying the URL on load, keep
   `location.search`/`hash`: OAuth returns a one-time code there.
@@ -334,6 +337,43 @@ XXXXXX` names have a space, so they never clash with usernames and needn't be un
 - `public/og-image.png` (1200x630) and `public/apple-touch-icon.png` were rendered with
   the game's own `drawBoard` and stylesheet; regenerate them if the look changes.
 
+## Search engines: prerendered pages, archive, sitemap
+
+- `npm run build` = `tsc -b && vite build && node scripts/prerender.mjs`. The script loads
+  `src/prerender/site.tsx` through Vite (so `import.meta.env` matches the build) and
+  writes real HTML into `dist/` for `/`, `/how-to-play`, `/leaderboard`, `/archive`,
+  `/archive/<date>` (every archived day), `/privacy`, `/terms`, plus `sitemap.xml` and
+  `robots.txt`. Files are `dist/<path>.html`; Workers' default `html_handling` serves them
+  at the clean URL (trailing slashes and `.html` redirect to it). Everything else still
+  falls back to `index.html`, which is the prerendered home page.
+- A page is the built `index.html` with the block between `<!--page-meta:start-->` and
+  `<!--page-meta:end-->` replaced (`headTags` in `src/ui/pageMeta.ts`: title,
+  description, canonical, Open Graph, X, JSON-LD) and the same React screen the app shows
+  rendered into `<div id="root"><!--app--></div>` with `renderToStaticMarkup`. The app
+  doesn't hydrate; `createRoot` renders afresh. Data a page was built with (scores) is
+  embedded as `#prerender-data` JSON (`src/ui/prerenderData.ts`) so the app doesn't flash
+  "Loading…". Screens rendered at build time must not touch `window`/`document`/storage
+  during render (effects are fine), and take `nowMs`/`initial` props instead of reading the
+  clock or fetching.
+- `metaFor(route)` (`src/ui/pageMeta.ts`, tested) gives every page a unique title and
+  description; `useDocumentMeta` applies it as the player moves around the app. Home:
+  "Daily Darts – A New Darts Checkout Puzzle Every Day", JSON-LD `WebSite` + `VideoGame`
+  (free, web browser); other content pages carry `BreadcrumbList`. Absolute URLs come
+  from `VITE_SITE_URL`; without it there's no canonical and the sitemap is empty.
+- The prerendered home page leaves out the build day's date and targets
+  (`MenuScreen prerendered`); the app fills them in. The about text below the game is
+  `AboutDailyDarts` (~200 words; a test keeps it between 150 and 250).
+- Archive (`src/lib/archive.ts`, tested): a date joins at D+1 18:00 UTC (`ARCHIVE_DELAY_HOURS`
+  = 42), once it's over everywhere and past the server's `GRACE_HOURS`, so it never
+  spoils a puzzle still being played for rank and its top 10 (`ARCHIVE_TOP`) are final.
+  It starts where practice starts. `ArchiveScreen` lists days by month;
+  `ArchiveDayScreen` shows targets, best finish (`findCheckout`), par, top scores, "Play
+  this puzzle" (practice) and previous/next links. Top scores come from `get_leaderboard`
+  with the publishable key at build time; if that fails the page still builds.
+- The site must be rebuilt daily for new archive pages: `.github/workflows/daily-rebuild.yml`
+  POSTs a Cloudflare Workers Builds deploy hook (secret `CLOUDFLARE_DEPLOY_HOOK_URL`) at
+  18:20 UTC. Setup in `docs/deploy-cloudflare.md`.
+
 ## Privacy policy and terms
 
 - `src/ui/LegalScreen.tsx`: `/privacy` and `/terms`, linked from the menu and profile
@@ -342,7 +382,8 @@ XXXXXX` names have a space, so they never clash with usernames and needn't be un
 - The privacy policy describes what's actually collected (local storage keys, guest
   accounts, rounds incl. tap timings, Google name/email/picture via Supabase, host logs)
   and that nothing else is. If you add analytics, ads, cookies, new stored data or new
-  providers, update it and `LAST_UPDATED` in the same change.
+  providers, update it and `LAST_UPDATED` in the same change. It also says leaderboards and the
+  archive (top 10 names per day) are public, indexed pages rebuilt daily.
 
 ## Notes
 
