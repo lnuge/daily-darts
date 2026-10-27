@@ -29,7 +29,7 @@ export function PracticeScreen({ today, onNavigate }: Props) {
         </button>
       </div>
       <header className="title">
-        <h2>Practice</h2>
+        <h1>Practice</h1>
         <p className="badge practice">Unranked</p>
       </header>
       <p className="muted">

@@ -9,7 +9,7 @@ import { GameScreen } from './GameScreen'
 import { HowToPlay } from './HowToPlay'
 import { HowToPlayPage } from './HowToPlayPage'
 import { LeaderboardScreen } from './LeaderboardScreen'
-import { PrivacyScreen, TermsScreen } from './LegalScreen'
+import { AccessibilityScreen, PrivacyScreen, TermsScreen } from './LegalScreen'
 import { MenuScreen } from './MenuScreen'
 import { PracticeScreen } from './PracticeScreen'
 import { ProfileScreen } from './ProfileScreen'
@@ -121,7 +121,15 @@ export function App() {
       )}
       {route.name === 'privacy' && <PrivacyScreen onNavigate={setRoute} />}
       {route.name === 'terms' && <TermsScreen onNavigate={setRoute} />}
-      <HowToPlay open={howTo} onClose={closeHowTo} />
+      {route.name === 'accessibility' && <AccessibilityScreen onNavigate={setRoute} />}
+      <HowToPlay
+        open={howTo}
+        onClose={closeHowTo}
+        onNavigate={(next) => {
+          closeHowTo()
+          setRoute(next)
+        }}
+      />
     </main>
   )
 }

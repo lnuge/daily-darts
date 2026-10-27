@@ -169,7 +169,8 @@ function Board({ data }: { data: Leaderboard }) {
           </>
         )}
       </p>
-      <div className="board-table">
+      {/* Focusable so it can be scrolled with the keyboard. */}
+      <div className="board-table" tabIndex={0} role="region" aria-label="Leaderboard">
         <table>
           <thead>
             <tr>

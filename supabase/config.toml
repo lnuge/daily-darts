@@ -427,3 +427,6 @@ enabled = true
 # Verifies and saves ranked rounds. Requires a valid user JWT (guests count).
 [functions.submit-round]
 verify_jwt = true
+
+[functions.delete-account]
+verify_jwt = true

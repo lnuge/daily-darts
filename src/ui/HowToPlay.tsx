@@ -1,21 +1,29 @@
 import { useEffect, useRef } from 'react'
+import type { Navigate } from './App'
+import { RouteLink } from './RouteLink'
 
 type Props = {
   open: boolean
   onClose: () => void
+  /** For the Terms and Privacy links: closes the dialog and goes there. */
+  onNavigate: Navigate
 }
 
 /**
  * A short how-to-play, shown the first time someone visits and from the menu.
  * A native <dialog>: modal, traps focus, closes with Escape.
  */
-export function HowToPlay({ open, onClose }: Props) {
+export function HowToPlay({ open, onClose, onNavigate }: Props) {
   const ref = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
     const dialog = ref.current
     if (!dialog) return
-    if (open && !dialog.open) dialog.showModal()
+    if (open && !dialog.open) {
+      dialog.showModal()
+      // Start on "Let's play" rather than the first link in the text.
+      dialog.querySelector<HTMLButtonElement>('form button')?.focus()
+    }
     if (!open && dialog.open) dialog.close()
   }, [open])
 
@@ -33,6 +41,17 @@ export function HowToPlay({ open, onClose }: Props) {
       <div className="how-to-body">
         <h2 id="how-to-title">How to play</h2>
         <HowToPlaySteps />
+        <p className="agree muted">
+          By playing, you agree to the{' '}
+          <RouteLink to={{ name: 'terms' }} onNavigate={onNavigate}>
+            Terms
+          </RouteLink>{' '}
+          and{' '}
+          <RouteLink to={{ name: 'privacy' }} onNavigate={onNavigate}>
+            Privacy Policy
+          </RouteLink>
+          . Finishing a ranked round puts your score and a player name on the public leaderboard.
+        </p>
         <form method="dialog">
           <button autoFocus>Let's play</button>
         </form>

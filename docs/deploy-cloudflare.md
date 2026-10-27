@@ -199,6 +199,13 @@ pass.
 - [ ] Sign out, then sign in with Google on another browser or phone: the profile
       shows the same stats.
 
+**Deleting an account** (with a throwaway account: another browser, finish a round)
+
+- [ ] Profile → **Delete my account** → **Delete everything**: it says the account is
+      deleted, and the profile shows a fresh guest.
+- [ ] Supabase → **Authentication → Users** no longer lists that user, and **Table
+      Editor → rounds** has none of its rounds; it's gone from that day's leaderboard.
+
 **Leaderboard**
 
 - [ ] **Leaderboard** shows your verified round with your row highlighted, the player

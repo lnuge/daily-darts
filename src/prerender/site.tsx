@@ -23,7 +23,7 @@ import { ArchiveDayScreen, type ArchiveScores } from '../ui/ArchiveDayScreen'
 import { ArchiveScreen } from '../ui/ArchiveScreen'
 import { HowToPlayPage } from '../ui/HowToPlayPage'
 import { LeaderboardScreen } from '../ui/LeaderboardScreen'
-import { PrivacyScreen, TermsScreen } from '../ui/LegalScreen'
+import { AccessibilityScreen, PrivacyScreen, TermsScreen } from '../ui/LegalScreen'
 import { MenuScreen } from '../ui/MenuScreen'
 import {
   absoluteUrl,
@@ -161,6 +161,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<SiteFile[]> 
     }),
     page({ name: 'privacy' }, <PrivacyScreen onNavigate={navigate} />),
     page({ name: 'terms' }, <TermsScreen onNavigate={navigate} />),
+    page({ name: 'accessibility' }, <AccessibilityScreen onNavigate={navigate} />),
   ]
 
   // Pages that change every day were modified today; an archived day last

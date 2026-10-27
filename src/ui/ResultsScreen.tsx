@@ -129,7 +129,7 @@ export function ResultsScreen({ mode, puzzle, summary, submission, onNavigate }:
         </button>
       </div>
       <header className="title">
-        <h2>{ranked ? 'Game shot!' : 'Practice complete'}</h2>
+        <h1>{ranked ? 'Game shot!' : 'Practice complete'}</h1>
         {ranked ? (
           <p className="muted">Daily Darts #{puzzle.puzzleNumber}</p>
         ) : (
@@ -212,7 +212,7 @@ export function ResultsScreen({ mode, puzzle, summary, submission, onNavigate }:
           <button className="link" onClick={() => onNavigate({ name: 'practice' })}>
             Play a past day
           </button>
-          <AccountBar />
+          <AccountBar onNavigate={onNavigate} />
         </>
       ) : (
         <div className="actions">

@@ -91,7 +91,7 @@ export function MenuScreen({ today, onNavigate, prerendered = false }: Props) {
         </RouteLink>
       </nav>
 
-      <AccountBar />
+      <AccountBar onNavigate={onNavigate} />
       <AboutDailyDarts onNavigate={onNavigate} />
       <LegalLinks onNavigate={onNavigate} />
     </section>

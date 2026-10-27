@@ -29,3 +29,14 @@ export function remove(key: string): void {
     // Ignore.
   }
 }
+
+/** Forgets everything Daily Darts stored on this device (after deleting the account). */
+export function clearAll(): void {
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith(PREFIX)) localStorage.removeItem(key)
+    }
+  } catch {
+    // Ignore.
+  }
+}

@@ -7,10 +7,12 @@ import {
   takeAuthRedirectError,
   type AuthRedirectError,
 } from '../lib/auth'
+import type { Navigate } from './App'
+import { RouteLink } from './RouteLink'
 import { useAuth } from './useAuth'
 
 /** Who's playing, with sign-in / upgrade / sign-out. Hidden when Supabase isn't configured. */
-export function AccountBar() {
+export function AccountBar({ onNavigate }: { onNavigate: Navigate }) {
   const auth = useAuth()
   const [error, setError] = useState<AuthRedirectError | null>(takeAuthRedirectError)
   const [busy, setBusy] = useState(false)
@@ -36,6 +38,7 @@ export function AccountBar() {
           <button className="link" disabled={busy} onClick={() => run(signInWithGoogle)}>
             Sign in with Google
           </button>
+          <AgreeToSignIn onNavigate={onNavigate} />
         </>
       )}
 
@@ -47,6 +50,7 @@ export function AccountBar() {
           <button className="link" disabled={busy} onClick={() => run(signInWithGoogle)}>
             Sign in with Google to keep your progress
           </button>
+          <AgreeToSignIn onNavigate={onNavigate} />
         </>
       )}
 
@@ -86,5 +90,22 @@ export function AccountBar() {
         </div>
       )}
     </div>
+  )
+}
+
+/** Shown with every "Sign in with Google", so signing in is agreeing to the terms. */
+function AgreeToSignIn({ onNavigate }: { onNavigate: Navigate }) {
+  return (
+    <p className="agree muted">
+      By signing in, you agree to the{' '}
+      <RouteLink to={{ name: 'terms' }} onNavigate={onNavigate}>
+        Terms
+      </RouteLink>{' '}
+      and{' '}
+      <RouteLink to={{ name: 'privacy' }} onNavigate={onNavigate}>
+        Privacy Policy
+      </RouteLink>
+      .
+    </p>
   )
 }

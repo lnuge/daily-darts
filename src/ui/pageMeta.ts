@@ -118,6 +118,14 @@ export function metaFor(route: Route): PageMeta {
         description: 'The terms for playing Daily Darts.',
         path,
       }
+    case 'accessibility':
+      return {
+        title: 'Accessibility – Daily Darts',
+        description:
+          'How Daily Darts works with keyboards, screen readers, zoom and reduced motion, and ' +
+          'how to report a problem.',
+        path,
+      }
   }
 }
 

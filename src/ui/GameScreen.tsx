@@ -124,6 +124,7 @@ export function GameScreen({ mode, date, onNavigate }: Props) {
 
   return (
     <section className="screen game">
+      <h1 className="visually-hidden">{ranked ? "Today's puzzle" : `Practice: ${date}`}</h1>
       <Hud
         round={round}
         steps={steps}

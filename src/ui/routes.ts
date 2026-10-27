@@ -10,6 +10,7 @@
  *   /leaderboard/2026-10-15    that day's leaderboard
  *   /profile                   stats and account
  *   /privacy, /terms           privacy policy and terms of service
+ *   /accessibility             accessibility statement
  *   /how-to-play               the rules
  *   /archive                   every past puzzle
  *   /archive/2026-11-14        one past puzzle: targets, best finishes, top scores
@@ -31,6 +32,7 @@ export type Route =
   | { name: 'profile' }
   | { name: 'privacy' }
   | { name: 'terms' }
+  | { name: 'accessibility' }
   | { name: 'howToPlay' }
   | { name: 'archive' }
   | { name: 'archiveDay'; date: string }
@@ -51,6 +53,8 @@ export function pathFor(route: Route): string {
       return '/privacy'
     case 'terms':
       return '/terms'
+    case 'accessibility':
+      return '/accessibility'
     case 'howToPlay':
       return '/how-to-play'
     case 'archive':
@@ -100,6 +104,7 @@ export function routeFromPath(path: string, today: string): Route {
       return second === undefined ? { name: 'profile' } : { name: 'menu' }
     case 'privacy':
     case 'terms':
+    case 'accessibility':
       return second === undefined ? { name: first } : { name: 'menu' }
     case 'how-to-play':
       return second === undefined ? { name: 'howToPlay' } : { name: 'menu' }

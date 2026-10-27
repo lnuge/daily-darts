@@ -68,6 +68,7 @@ describe('buildSite', () => {
         ...DATES.map((d) => `archive/${d}.html`),
         'privacy.html',
         'terms.html',
+        'accessibility.html',
         'sitemap.xml',
         'robots.txt',
       ].sort(),
@@ -175,6 +176,7 @@ describe('buildSite', () => {
       ...DATES.map((d) => `${SITE}/archive/${d}`),
       `${SITE}/privacy`,
       `${SITE}/terms`,
+      `${SITE}/accessibility`,
     ])
     expect(sitemap).toContain(
       `<loc>${SITE}/archive/2026-11-02</loc>\n    <lastmod>2026-11-03</lastmod>`,

@@ -17,6 +17,7 @@ const ROUTES: Route[] = [
   { name: 'profile' },
   { name: 'privacy' },
   { name: 'terms' },
+  { name: 'accessibility' },
 ]
 
 describe('metaFor', () => {

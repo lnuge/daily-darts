@@ -220,6 +220,12 @@ XXXXXX` names have a space, so they never clash with usernames and needn't be un
   Handles capitals, camelCase/underscore/digit word breaks, extra repeated letters and
   digits for letters. The list is server-only, not in the client. Add words to
   `username-filter.test.ts` with both blocked names and innocent look-alikes.
+- Account deletion: **Delete my account** on the profile (`DeleteAccount`,
+  `src/lib/account.ts`) calls the `delete-account` edge function, which deletes the caller's
+  auth user with the service role (`admin.auth.admin.deleteUser`, the supported way).
+  `on delete cascade` removes the profile and every round (`supabase/tests/delete-account.test.ts`);
+  the device then signs out and `clearAll()` wipes `daily-darts:*` storage. Any new table
+  holding player data must cascade from `profiles` or `auth.users` too.
 - Auth (`src/lib/auth.ts`): a guest (anonymous) session starts lazily when a ranked round
   finishes; "Sign in with Google" links Google to the guest (`linkIdentity`) so the user
   id and rounds carry over. `ensureSession` dedupes concurrent calls; keep it that way.
@@ -244,7 +250,8 @@ XXXXXX` names have a space, so they never clash with usernames and needn't be un
 - Client: `src/lib/submit.ts` + `useRoundSubmission` send a finished ranked round once,
   remember success in `daily-darts:submitted:<date>`, treat `already_submitted` as done,
   and offer a retry on network or server failure.
-- Deploy: `npm run functions:deploy` (syncs first, bundles server-side, no Docker).
+- Deploy: `npm run functions:deploy` (syncs first, bundles `submit-round` and
+  `delete-account` server-side, no Docker).
 
 ## Leaderboard
 
@@ -322,7 +329,7 @@ XXXXXX` names have a space, so they never clash with usernames and needn't be un
 
 - Every screen has a URL (`src/ui/routes.ts`, pure and tested): `/`, `/play`,
   `/practice`, `/practice/<date>`, `/leaderboard`, `/leaderboard/<date>`, `/profile`,
-  `/privacy`, `/terms`, `/how-to-play`, `/archive`, `/archive/<date>`. Navigation links are
+  `/privacy`, `/terms`, `/accessibility`, `/how-to-play`, `/archive`, `/archive/<date>`. Navigation links are
   `RouteLink` (a real `<a href>`, so crawlers follow it) wherever they aren't actions.
   `App` pushes history on navigation and listens for `popstate`; unknown or invalid
   paths fall back to the nearest screen. When tidying the URL on load, keep
@@ -342,7 +349,8 @@ XXXXXX` names have a space, so they never clash with usernames and needn't be un
 - `npm run build` = `tsc -b && vite build && node scripts/prerender.mjs`. The script loads
   `src/prerender/site.tsx` through Vite (so `import.meta.env` matches the build) and
   writes real HTML into `dist/` for `/`, `/how-to-play`, `/leaderboard`, `/archive`,
-  `/archive/<date>` (every archived day), `/privacy`, `/terms`, plus `sitemap.xml` and
+  `/archive/<date>` (every archived day), `/privacy`, `/terms`, `/accessibility`, plus
+  `sitemap.xml` and
   `robots.txt`. Files are `dist/<path>.html`; Workers' default `html_handling` serves them
   at the clean URL (trailing slashes and `.html` redirect to it). Everything else still
   falls back to `index.html`, which is the prerendered home page.
@@ -374,6 +382,19 @@ XXXXXX` names have a space, so they never clash with usernames and needn't be un
   POSTs a Cloudflare Workers Builds deploy hook (secret `CLOUDFLARE_DEPLOY_HOOK_URL`) at
   18:20 UTC. Setup in `docs/deploy-cloudflare.md`.
 
+## Accessibility
+
+- Target: WCAG 2.2 AA. Checked with axe-core on every screen (0 violations at the last
+  check); re-run it after UI changes. Statement at `/accessibility` (`AccessibilityScreen`),
+  which is honest that the timed throw needs sight and quick reactions (real-time
+  exception).
+- Text colours: `--chalk`, `--chalk-dim`, `--chalk-faded` (faded but 4.5:1) and the
+  coloured chalks all pass AA on the board. `--chalk-faint` (2.4:1) is for lines and
+  decoration only, never text; input borders use `--chalk-dim` (3:1 for UI components).
+- Every page has one `<h1>` (the game's is `.visually-hidden`). Scrollable regions are
+  focusable. Screen-reader-only text uses `.visually-hidden`, not `aria-label` on a plain
+  `div`. Dialogs focus their main button.
+
 ## Privacy policy and terms
 
 - `src/ui/LegalScreen.tsx`: `/privacy` and `/terms`, linked from the menu and profile
@@ -384,6 +405,19 @@ XXXXXX` names have a space, so they never clash with usernames and needn't be un
   and that nothing else is. If you add analytics, ads, cookies, new stored data or new
   providers, update it and `LAST_UPDATED` in the same change. It also says leaderboards and the
   archive (top 10 names per day) are public, indexed pages rebuilt daily.
+- Written with US state laws in mind (not legal advice; a lawyer should review): CalOPPA
+  (Do Not Track disclosure, no cross-site tracking), "we don't sell or share" (CCPA/CPRA
+  terms), Global Privacy Control honoured, state privacy rights with a 45-day answer and an
+  appeal, security and breach notice, COPPA (not for under-13s; delete on discovery),
+  California's minor "eraser" right (self-serve deletion). If the site ever adds ads,
+  analytics, payments or prizes, all of that needs revisiting first.
+- Terms: 13+ (under 18 with a parent), no prizes/no gambling (keeps it clear of
+  sweepstakes and gambling laws), fair play, usernames, no affiliation, US$50 liability
+  cap, informal disputes first, severability. No governing-law clause yet (needs the
+  owner's state).
+- Agreement: "By playing, you agree..." in the first-visit how-to dialog and "By signing
+  in, you agree..." next to every Sign in with Google (`AccountBar`), both linking the
+  Terms and Privacy Policy.
 
 ## Notes
 

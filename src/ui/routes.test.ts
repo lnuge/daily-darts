@@ -14,6 +14,7 @@ describe('routes', () => {
     ['/profile', { name: 'profile' }],
     ['/privacy', { name: 'privacy' }],
     ['/terms', { name: 'terms' }],
+    ['/accessibility', { name: 'accessibility' }],
     ['/how-to-play', { name: 'howToPlay' }],
     ['/archive', { name: 'archive' }],
     ['/archive/2026-11-20', { name: 'archiveDay', date: '2026-11-20' }],

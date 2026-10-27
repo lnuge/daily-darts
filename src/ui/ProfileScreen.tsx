@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase'
 import { AccountBar } from './AccountBar'
+import { DeleteAccount } from './DeleteAccount'
 import { LegalLinks } from './LegalScreen'
 import type { Navigate } from './App'
 import { StatsPanel } from './PlayerStats'
@@ -27,7 +28,7 @@ export function ProfileScreen({ today, onNavigate }: Props) {
         </button>
       </div>
       <header className="title">
-        <h2>{signedIn ? (auth.displayName ?? 'Profile') : 'Profile'}</h2>
+        <h1>{signedIn ? (auth.displayName ?? 'Profile') : 'Profile'}</h1>
         {signedIn && (
           <p className="muted">{auth.isGuest ? 'Guest player' : 'Signed in with Google'}</p>
         )}
@@ -47,7 +48,9 @@ export function ProfileScreen({ today, onNavigate }: Props) {
         <StatsPanel load={stats} />
       )}
 
-      <AccountBar />
+      <AccountBar onNavigate={onNavigate} />
+
+      {supabase && <DeleteAccount signedIn={signedIn} onNavigate={onNavigate} />}
 
       <LegalLinks onNavigate={onNavigate} />
     </section>

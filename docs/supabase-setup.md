@@ -115,11 +115,16 @@ npm.cmd run dev
 If the Google account you pick already has its own Daily Darts account, the game offers to
 switch to it; rounds played as the guest stay with the guest.
 
-## 7. Deploy the submit-round function
+## 7. Deploy the edge functions
 
-Finished ranked rounds are sent to the `submit-round` edge function, which replays the
-throws on the server and saves the verified score. Deploy it (and apply any new
-migrations) with:
+Two edge functions run on Supabase:
+
+- `submit-round`: finished ranked rounds are sent here; it replays the throws on the
+  server and saves the verified score.
+- `delete-account`: **Delete my account** on the Profile screen calls it; it deletes the
+  player's auth user, which also deletes their profile and every round.
+
+Deploy both (and apply any new migrations) with:
 
 ```powershell
 npm.cmd run db:push
@@ -130,10 +135,11 @@ npm.cmd run functions:deploy
 function, `get_leaderboard`). Run it after every `git pull` that adds a file to
 `supabase/migrations`.
 
-`functions:deploy` first copies the latest game code into the function, then bundles it
-on Supabase's servers, so Docker isn't needed. Run it again whenever `src/game` changes.
+`functions:deploy` first copies the latest game code into `submit-round`, then bundles
+both functions on Supabase's servers, so Docker isn't needed. Run it again whenever
+`src/game` or anything in `supabase/functions` changes.
 
-Check: in the dashboard, **Edge Functions** lists `submit-round`. Finish today's round in
+Check: in the dashboard, **Edge Functions** lists `submit-round` and `delete-account`. Finish today's round in
 the game: the results screen says **✓ Score verified and saved**, and **Table Editor →
 rounds** has your row with `verified = true`.
 

@@ -15,7 +15,7 @@
     "test:watch": "vitest",
     "db:push": "supabase db push",
     "sync:game": "node scripts/sync-shared-game.mjs",
-    "functions:deploy": "npm run sync:game && supabase functions deploy submit-round --use-api",
+    "functions:deploy": "npm run sync:game && supabase functions deploy submit-round --use-api && supabase functions deploy delete-account --use-api",
     "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {

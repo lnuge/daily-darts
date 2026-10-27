@@ -109,16 +109,15 @@ export function Hud(props: Props) {
       </ol>
 
       <div className="hud-main">
-        <div className="remaining" aria-label={`Score left: ${round.remaining}`}>
+        <div className="remaining">
+          <span className="visually-hidden">Score left: </span>
           {crossed.length > CROSSED_SHOWN && <span className="crossed-more">…</span>}
           {crossed.slice(-CROSSED_SHOWN).map((score, i) => (
             <s key={crossed.length - CROSSED_SHOWN + i} className="crossed" aria-hidden="true">
               {score}
             </s>
           ))}
-          <span className="remaining-value" aria-hidden="true">
-            {round.finished ? '—' : round.remaining}
-          </span>
+          <span className="remaining-value">{round.finished ? '—' : round.remaining}</span>
         </div>
         <div className="visit" aria-label={`Darts this visit: ${round.dartsThisVisit}`}>
           {slots.map((hit, i) => (
