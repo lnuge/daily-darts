@@ -4,7 +4,7 @@ Daily Darts is a static single-page app served by a Cloudflare Worker with stati
 assets (no server code). Every push to `main` builds and deploys it automatically.
 Supabase (database, auth, the `submit-round` function) is deployed separately.
 
-Commands are PowerShell, run from `C:\Users\laird\code\daily-darts`.
+Commands are PowerShell, run from the project folder.
 
 > Dashboard labels were current when written but move around. If one has changed, look
 > for the nearest match; the settings themselves (build command, build variables, custom

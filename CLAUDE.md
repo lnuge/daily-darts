@@ -395,6 +395,30 @@ XXXXXX` names have a space, so they never clash with usernames and needn't be un
   focusable. Screen-reader-only text uses `.visually-hidden`, not `aria-label` on a plain
   `div`. Dialogs focus their main button.
 
+## Security
+
+- The GitHub repository is **public**, and so are its Actions logs. Nothing secret is ever
+  committed: no `.env*` files (gitignored except `.env.example`, which has empty values),
+  no Supabase secret/service-role key, Google client secret, Cloudflare token or deploy
+  hook URL. Those live only in the Supabase dashboard, Cloudflare build variables and
+  GitHub Actions secrets. The last full scan of every commit (Oct 2026) found none.
+- Only four values reach browsers, all public by design: `VITE_SUPABASE_URL`,
+  `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SITE_URL`, `VITE_CONTACT_EMAIL`. The service-role
+  key is read only inside the edge functions (`Deno.env`).
+- Security headers: the prerender writes `dist/_headers` (`securityHeaders` in
+  `src/prerender/site.tsx`), which Cloudflare sends with every response: a strict
+  Content-Security-Policy (own scripts, styles, fonts and images only; `connect-src` is
+  the site plus the Supabase origin from `VITE_SUPABASE_URL`), `frame-ancestors 'none'` /
+  `X-Frame-Options: DENY` against clickjacking, nosniff, referrer and permissions policies,
+  HSTS. No inline scripts or `style=` attributes, or the CSP blocks them; a new external
+  service needs adding to `connect-src` (or `img-src`, ...). `wrangler.json`,
+  `.assetsignore`, `_headers` and `.dev.vars` are never served.
+- Database: every `public` table has RLS on; anon/authenticated can only read, plus the
+  column-limited inserts above; `security definer` functions set `search_path = ''` and
+  have EXECUTE revoked from everyone who doesn't need it (including the
+  `handle_new_user` trigger function).
+- Keep `npm audit` at 0 (the last findings were in Cloudflare's local dev tools).
+
 ## Privacy policy and terms
 
 - `src/ui/LegalScreen.tsx`: `/privacy` and `/terms`, linked from the menu and profile

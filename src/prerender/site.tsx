@@ -1,7 +1,8 @@
 /**
  * The static site built after `vite build`: real HTML for the pages search
  * engines should see (home, rules, leaderboard, archive, every archived day,
- * privacy, terms), plus sitemap.xml and robots.txt.
+ * privacy, terms, accessibility), plus sitemap.xml, robots.txt and the
+ * security headers Cloudflare sends with every page (_headers).
  *
  * Each page is the built index.html with its own <head> tags (pageMeta.ts)
  * and the same React screens the app shows, rendered to HTML. The app doesn't
@@ -182,6 +183,7 @@ export async function buildSite(options: BuildSiteOptions): Promise<SiteFile[]> 
       ),
     },
     { file: 'robots.txt', contents: robots(siteUrl) },
+    { file: '_headers', contents: securityHeaders(envSupabaseUrl()) },
   ]
 }
 
@@ -214,4 +216,47 @@ export function robots(siteUrl: string | null): string {
   const lines = ['User-agent: *', 'Allow: /']
   if (siteUrl) lines.push('', `Sitemap: ${absoluteUrl(siteUrl, '/sitemap.xml')}`)
   return lines.join('\n') + '\n'
+}
+
+function envSupabaseUrl(): string | null {
+  return import.meta.env.VITE_SUPABASE_URL?.trim() || null
+}
+
+/**
+ * Cloudflare's _headers file: security headers on every response.
+ *
+ * - The Content-Security-Policy lets pages run only the site's own scripts,
+ *   styles, fonts and images, and talk only to the site and its Supabase
+ *   project. If a cross-site scripting bug ever slipped in, injected code
+ *   couldn't load anything or send data anywhere else. The prerendered JSON
+ *   (JSON-LD, #prerender-data) isn't JavaScript, so it isn't affected.
+ * - frame-ancestors / X-Frame-Options: no other site can show Daily Darts in
+ *   a frame, so nobody can trick a player into clicking "Delete my account"
+ *   through an invisible copy of the page (clickjacking).
+ */
+export function securityHeaders(supabaseUrl: string | null): string {
+  const supabaseOrigin = supabaseUrl ? new URL(supabaseUrl).origin : null
+  const csp = [
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self'",
+    // The chalkboard texture is an inline SVG data: URI in the CSS.
+    "img-src 'self' data:",
+    "font-src 'self'",
+    ['connect-src', "'self'", supabaseOrigin].filter(Boolean).join(' '),
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "object-src 'none'",
+  ].join('; ')
+  const headers = [
+    `Content-Security-Policy: ${csp}`,
+    'X-Frame-Options: DENY',
+    'X-Content-Type-Options: nosniff',
+    'Referrer-Policy: strict-origin-when-cross-origin',
+    'Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()',
+    'Strict-Transport-Security: max-age=31536000',
+    'Cross-Origin-Opener-Policy: same-origin',
+  ]
+  return `/*\n${headers.map((h) => `  ${h}`).join('\n')}\n`
 }

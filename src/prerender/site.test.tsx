@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { generateDailyPuzzle } from '../game/puzzle'
 import { archiveDates } from '../lib/archive'
 import type { Leaderboard } from '../lib/leaderboard'
-import { buildSite, fileFor, type SiteFile } from './site'
+import { buildSite, fileFor, securityHeaders, type SiteFile } from './site'
 
 const TEMPLATE = `<!doctype html>
 <html lang="en">
@@ -70,6 +70,7 @@ describe('buildSite', () => {
         'terms.html',
         'accessibility.html',
         'sitemap.xml',
+        '_headers',
         'robots.txt',
       ].sort(),
     )
@@ -203,5 +204,23 @@ describe('buildSite', () => {
         fetchScores: async () => null,
       }),
     ).rejects.toThrow(/page-meta/)
+  })
+})
+
+describe('securityHeaders', () => {
+  it('locks pages to the site and its Supabase project, and forbids framing', () => {
+    const headers = securityHeaders('https://abcdefghijklmnopqrst.supabase.co')
+    expect(headers.startsWith('/*\n')).toBe(true)
+    const csp = headers.match(/Content-Security-Policy: (.*)/)![1]
+    expect(csp).toContain("script-src 'self'")
+    expect(csp).toContain("connect-src 'self' https://abcdefghijklmnopqrst.supabase.co")
+    expect(csp).toContain("frame-ancestors 'none'")
+    expect(csp).not.toContain('unsafe')
+    expect(headers).toContain('X-Frame-Options: DENY')
+    expect(headers).toContain('X-Content-Type-Options: nosniff')
+  })
+
+  it("leaves Supabase out when it isn't configured", () => {
+    expect(securityHeaders(null)).toContain("connect-src 'self';")
   })
 })

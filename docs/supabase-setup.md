@@ -2,7 +2,7 @@
 
 One-time setup to connect Daily Darts to Supabase: the database tables, guest
 sessions and Google sign-in. About 20 minutes. Commands are PowerShell, run from
-the project folder (`C:\Users\laird\code\daily-darts`).
+the project folder.
 
 The game works without any of this; it just plays offline with no accounts.
 

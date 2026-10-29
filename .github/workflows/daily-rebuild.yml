@@ -30,4 +30,7 @@ jobs:
             echo "::warning::The CLOUDFLARE_DEPLOY_HOOK_URL secret isn't set, so nothing was rebuilt."
             exit 0
           fi
-          curl --fail --silent --show-error --retry 3 -X POST "$DEPLOY_HOOK_URL"
+          # The repository is public, and so are its Actions logs: print only the status
+          # code, never the hook URL or Cloudflare's reply.
+          curl --fail --silent --show-error --retry 3 -X POST "$DEPLOY_HOOK_URL" \
+            --output /dev/null --write-out "Cloudflare answered HTTP %{http_code}\n"

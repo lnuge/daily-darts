@@ -61,6 +61,12 @@ describe('profiles', () => {
     expect(rows[0].display_name).toMatch(/^Player [0-9A-F]{6}$/)
   })
 
+  it("can't have their creation function called directly by visitors or players", async () => {
+    for (const who of [{ role: 'anon' as const }, { role: 'authenticated' as const, id: alice }]) {
+      await expect(as(who, 'select public.handle_new_user()')).rejects.toThrow(/permission denied/)
+    }
+  })
+
   it('are readable by everyone, signed in or not', async () => {
     const { rows } = await as({ role: 'anon' }, 'select count(*)::int as n from public.profiles')
     expect(rows[0]).toEqual({ n: 3 })
